@@ -105,6 +105,11 @@ go build -o simplescript ./cmd/simplescript
 Prefer Docker? `docker build -t simplescript .` then
 `docker run --rm -v "$PWD":/work simplescript run hello.ss`.
 
+**New to programming?** Start with the [gentle tutorial](docs/tutorial.md).
+**Coming from another language?** The
+[language reference](docs/language-reference.md) covers every construct and its
+Go mapping.
+
 ---
 
 ## A quick tour

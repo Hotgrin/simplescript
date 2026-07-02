@@ -1,0 +1,5 @@
+# Keep line endings consistent for everyone (fixes CRLF warnings on Windows).
+* text=auto
+*.go text
+*.ss text
+*.md text
