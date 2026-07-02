@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SimpleScript Playground — write English, watch it become Go</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EFF3F1;        /* pale eucalyptus morning */
+    --ink:#182420;
+    --pane:#FFFFFF;
+    --line:#D5DDD9;
+    --protea:#B8374F;       /* protea crimson — the accent */
+    --fynbos:#3E6B4F;       /* ok/success green */
+    --amber:#B07A1F;        /* warnings */
+    --muted:#5C6B65;
+    --mono:'IBM Plex Mono',ui-monospace,monospace;
+    --sans:'IBM Plex Sans',system-ui,sans-serif;
+    --display:'Bricolage Grotesque',var(--sans);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);display:flex;flex-direction:column}
+
+  header{display:flex;align-items:center;gap:1rem;padding:.8rem 1.2rem;border-bottom:2px solid var(--ink)}
+  .brand{font-family:var(--display);font-weight:800;font-size:1.35rem;letter-spacing:-.02em}
+  .brand a{color:inherit;text-decoration:none}
+  .brand .dot{color:var(--protea)}
+  .tag{color:var(--muted);font-size:.85rem;margin-right:auto}
+  select,button{font:inherit;font-size:.85rem;padding:.35rem .6rem;border:1.5px solid var(--ink);background:var(--pane);color:var(--ink);border-radius:6px;cursor:pointer}
+  .langflip{display:flex;border:1.5px solid var(--ink);border-radius:6px;overflow:hidden}
+  .langflip button{border:0;border-radius:0;background:var(--pane)}
+  .langflip button.on{background:var(--ink);color:var(--paper)}
+  a.gh{font-size:.85rem;color:var(--ink)}
+
+  main{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:0;min-height:0}
+  .desk{display:flex;flex-direction:column;min-height:0}
+  .desk+.desk{border-left:2px solid var(--ink)}
+  .desklabel{font-family:var(--display);font-weight:600;font-size:.8rem;text-transform:uppercase;letter-spacing:.08em;
+    padding:.5rem .9rem;border-bottom:1px solid var(--line);display:flex;gap:.6rem;align-items:center;background:var(--pane)}
+  .desklabel .arrow{color:var(--protea);font-weight:800}
+  textarea{flex:1;resize:none;border:0;outline:none;padding:1rem;background:var(--pane);color:var(--ink);
+    font-family:var(--mono);font-size:.95rem;line-height:1.55}
+  pre{flex:1;margin:0;padding:1rem;overflow:auto;background:var(--pane);font-family:var(--mono);font-size:.9rem;line-height:1.5;white-space:pre}
+  pre.updated{animation:settle .35s ease}
+  @keyframes settle{from{opacity:.45}to{opacity:1}}
+  @media(prefers-reduced-motion:reduce){pre.updated{animation:none}}
+
+  .watch{border-top:2px solid var(--ink);background:var(--pane)}
+  .watch h2{font-family:var(--display);font-size:.8rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;
+    margin:0;padding:.5rem .9rem;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:.5rem}
+  .watch h2 .pip{width:.55rem;height:.55rem;border-radius:50%;background:var(--fynbos)}
+  .watch h2 .pip.bad{background:var(--protea)}
+  #findings{list-style:none;margin:0;padding:.5rem .9rem .8rem;max-height:9.5rem;overflow:auto;font-size:.88rem}
+  #findings li{padding:.22rem 0;display:flex;gap:.55rem;align-items:baseline}
+  .sev{font-family:var(--mono);font-size:.72rem;padding:.06rem .45rem;border-radius:4px;color:#fff;flex:none}
+  .sev.error{background:var(--protea)} .sev.warning{background:var(--amber)} .sev.suggestion{background:var(--fynbos)} .sev.parse{background:var(--ink)}
+  .lnum{color:var(--muted);font-family:var(--mono);font-size:.78rem;flex:none}
+  #findings .allgood{color:var(--fynbos);font-weight:500}
+
+  #loading{position:fixed;inset:0;background:var(--paper);display:flex;flex-direction:column;gap:.8rem;align-items:center;justify-content:center;font-family:var(--display);font-weight:600}
+  #loading .spin{width:2rem;height:2rem;border:3px solid var(--line);border-top-color:var(--protea);border-radius:50%;animation:r 0.9s linear infinite}
+  @keyframes r{to{transform:rotate(360deg)}}
+
+  @media(max-width:860px){
+    main{grid-template-columns:1fr;grid-template-rows:45vh auto}
+    .desk+.desk{border-left:0;border-top:2px solid var(--ink)}
+    .tag{display:none}
+  }
+</style>
+</head>
+<body>
+
+<div id="loading"><div class="spin"></div>Waking up the transpiler…</div>
+
+<header>
+  <span class="brand"><a href="https://github.com/Hotgrin/simplescript">SimpleScript<span class="dot">.</span></a></span>
+  <span class="tag">write English on the left — watch real Go appear on the right</span>
+  <select id="examples" title="Load an example">
+    <option value="hello">Hello, world</option>
+    <option value="shop">Little shop</option>
+    <option value="mistakes">Deliberate mistakes</option>
+    <option value="safe">Things that can fail</option>
+    <option value="tests">Tests in English</option>
+  </select>
+  <div class="langflip" title="Watcher language">
+    <button id="en" class="on">English</button><button id="af">Afrikaans</button>
+  </div>
+  <a class="gh" href="https://github.com/Hotgrin/simplescript">GitHub ↗</a>
+</header>
+
+<main>
+  <section class="desk">
+    <div class="desklabel">You write <span class="arrow">→</span></div>
+    <textarea id="src" spellcheck="false" aria-label="SimpleScript source"></textarea>
+  </section>
+  <section class="desk">
+    <div class="desklabel"><span class="arrow">→</span> It becomes (real Go)</div>
+    <pre id="out" aria-live="polite"></pre>
+  </section>
+</main>
+
+<section class="watch">
+  <h2><span class="pip" id="pip"></span>The Watcher <span style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0">— only speaks when it is sure</span></h2>
+  <ul id="findings"></ul>
+</section>
+
+<script src="wasm_exec.js"></script>
+<script>
+const EXAMPLES = {
+hello:`# Welcome! Edit me — the Go updates as you type.
+say "Hello, world"
+
+set name to "AJ"
+say "Welcome, " plus name`,
+shop:`describe order
+    item is "Wireless mouse"
+    price is 299
+    quantity is 3
+end describe
+
+set total to price of order times quantity of order
+say "Order: " plus item of order
+say "Total: R" plus total
+
+action discount with amount, percent
+    give back amount minus (amount times percent divided by 100)
+end action
+
+say "After 10% off: R" plus discount with total, 10`,
+mistakes:`# The Watcher catches real mistakes — kindly.
+set total to 100
+say totall
+
+say greet with "AJ"
+
+set price to total divided by 0`,
+safe:`action safe divide with a, b
+    if b is 0
+        give back problem "cannot divide by zero"
+    end if
+    give back a divided by b
+end action
+
+try
+    set answer to safe divide with 10, 0
+    say answer
+if it fails
+    say "Caught: " plus the problem
+end try`,
+tests:`action add with a, b
+    give back a plus b
+end action
+
+test "addition works"
+    expect add with 2, 3 to be 5
+end test`};
+
+let lang = 'en';
+const src = document.getElementById('src'),
+      out = document.getElementById('out'),
+      list = document.getElementById('findings'),
+      pip = document.getElementById('pip');
+
+function render(){
+  if(!window.simplescriptReady) return;
+  const r = transpileSS(src.value);
+  const code = (r.goCode||'') + (r.testCode ? '\n// ---- main_test.go ----\n'+r.testCode : '');
+  out.textContent = code || '// (fix the notes below to see the Go)';
+  out.classList.remove('updated'); void out.offsetWidth; out.classList.add('updated');
+
+  list.innerHTML = '';
+  let bad = false;
+  (r.parseErrors||[]).forEach(e=>{
+    bad = true;
+    list.insertAdjacentHTML('beforeend',
+      `<li><span class="sev parse">can't read</span><span class="lnum">line ${e.line}</span><span>${esc(e.message)}</span></li>`);
+  });
+  (r.findings||[]).forEach(f=>{
+    if(f.severity==='error') bad = true;
+    list.insertAdjacentHTML('beforeend',
+      `<li><span class="sev ${f.severity}">${f.severity}</span><span class="lnum">line ${f.line}</span><span>${esc(lang==='af'?f.af:f.en)}</span></li>`);
+  });
+  if(!list.children.length)
+    list.innerHTML = `<li class="allgood">${lang==='af' ? 'Alles reg — geen bewysbare probleme nie.' : 'All good — no provable problems.'}</li>`;
+  pip.className = 'pip' + (bad ? ' bad' : '');
+}
+const esc = s => s.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+
+let t; src.addEventListener('input', ()=>{clearTimeout(t); t=setTimeout(render,250);});
+document.getElementById('examples').addEventListener('change', e=>{src.value=EXAMPLES[e.target.value]; render();});
+document.getElementById('en').onclick = ()=>{lang='en'; flip(); render();};
+document.getElementById('af').onclick = ()=>{lang='af'; flip(); render();};
+function flip(){document.getElementById('en').classList.toggle('on',lang==='en');
+                document.getElementById('af').classList.toggle('on',lang==='af');}
+
+const go = new Go();
+WebAssembly.instantiateStreaming(fetch('playground.wasm'), go.importObject).then(res=>{
+  go.run(res.instance);
+  const wait = setInterval(()=>{ if(window.simplescriptReady){
+    clearInterval(wait);
+    document.getElementById('loading').remove();
+    src.value = EXAMPLES.hello;
+    render();
+  }},30);
+}).catch(err=>{
+  document.getElementById('loading').innerHTML =
+    'Could not load the transpiler.<br><small>'+esc(String(err))+'</small>';
+});
+</script>
+</body>
+</html>

@@ -13,6 +13,8 @@
 > performance, and a checker that explains mistakes kindly — in English **or**
 > Afrikaans.
 
+**[▶ Try it in your browser — nothing to install](https://hotgrin.github.io/simplescript/playground/)**
+
 ---
 
 ## See it
@@ -207,7 +209,7 @@ tests across six packages), but it is young: the standard library is tiny, and
 some things are not built yet. Expect rough edges — and please
 [open an issue](https://github.com/Hotgrin/simplescript/issues) when you find one.
 
-**On the roadmap:** a browser playground (try it with nothing installed), remote
+**On the roadmap:** remote
 libraries (`use ... from "github.com/..."`), interactive `ask` prompts, a richer
 standard library, and the optional Assessor / AI-mentor checking layers.
 
