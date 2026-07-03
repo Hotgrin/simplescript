@@ -161,6 +161,21 @@ func TestInputFlags(t *testing.T) {
 	)
 }
 
+func TestSayFallibleInsideTry(t *testing.T) {
+	// "say <fallible call>" inside try must never print Go's (value, <nil>) pair.
+	src := "action half with n\nif n is 0\ngive back problem \"no\"\nend if\ngive back n divided by 2\nend action\n" +
+		"try\nsay half with 10\nif it fails\nsay the problem\nend try"
+	out := gen(t, src)
+	if strings.Contains(out, "fmt.Println(half(10))") {
+		t.Errorf("say of fallible call leaks the error tuple:\n%s", out)
+	}
+	for _, want := range []string{", err := half(10)", "fmt.Println(sayVal"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("missing %q in:\n%s", want, out)
+		}
+	}
+}
+
 func TestErrorHandling(t *testing.T) {
 	src := "action risky with x\n" +
 		"if x is 0\ngive back problem \"no zero\"\nend if\n" +

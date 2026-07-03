@@ -827,6 +827,16 @@ func (t *Transpiler) emitTryStmt(s ast.Stmt) string {
 				return "if _, err := " + t.emitCall(call) + "; err != nil {\nreturn err\n}"
 			}
 		}
+	case *ast.SayStmt:
+		// "say <fallible call>" must check the error and print only the value,
+		// otherwise Go's Println would show the raw (value, <nil>) pair.
+		if call, ok := n.Value.(*ast.CallExpr); ok {
+			if sig, ok := t.funcs[sanitize(call.Name)]; ok && sig.fallible {
+				t.needFmt = true
+				v := fmt.Sprintf("sayVal%d", t.uid())
+				return v + ", err := " + t.emitCall(call) + "\nif err != nil {\nreturn err\n}\nfmt.Println(" + v + ")"
+			}
+		}
 	}
 	return t.emitStmt(s)
 }

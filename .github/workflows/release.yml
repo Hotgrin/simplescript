@@ -1,0 +1,42 @@
+name: release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Test first
+        run: go test ./...
+
+      - name: Build binaries
+        run: |
+          mkdir -p dist
+          # Windows
+          GOOS=windows GOARCH=amd64 go build -o dist/hotgrin.exe ./cmd/hotgrin
+          cd dist && zip -q hotgrin-windows-amd64.zip hotgrin.exe && rm hotgrin.exe && cd ..
+          # Linux
+          GOOS=linux GOARCH=amd64 go build -o dist/hotgrin ./cmd/hotgrin
+          cd dist && tar -czf hotgrin-linux-amd64.tar.gz hotgrin && rm hotgrin && cd ..
+          # macOS (Intel and Apple Silicon)
+          GOOS=darwin GOARCH=amd64 go build -o dist/hotgrin ./cmd/hotgrin
+          cd dist && tar -czf hotgrin-macos-intel.tar.gz hotgrin && rm hotgrin && cd ..
+          GOOS=darwin GOARCH=arm64 go build -o dist/hotgrin ./cmd/hotgrin
+          cd dist && tar -czf hotgrin-macos-apple-silicon.tar.gz hotgrin && rm hotgrin && cd ..
+          ls -lh dist/
+
+      - name: Attach to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          generate_release_notes: true

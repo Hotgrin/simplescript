@@ -1,0 +1,51 @@
+# Loan calculator — a complete worked hotgrin project.
+#
+# Given a loan amount, a yearly interest rate, and a term in years, it works
+# out the monthly payment, the total you will pay, and the total interest.
+#
+#   hotgrin run loan.hot --amount 250000 --rate 11.5 --years 20
+#   hotgrin test loan.hot
+
+input amount as decimal default 250000
+input rate as decimal default 11.5
+input years as whole default 20
+
+action monthly payment with loan, yearly rate, term years
+    if yearly rate is 0
+        give back loan divided by (term years times 12)
+    end if
+
+    set monthly rate to yearly rate divided by 100 divided by 12
+    set months to term years times 12
+
+    # (1 + monthly rate) to the power of months, built with a loop —
+    # hotgrin has no power operator yet, and this is all a power is.
+    set factor to 1.0
+    repeat months times
+        set factor to factor times (1.0 plus monthly rate)
+    end repeat
+
+    give back loan times monthly rate times factor divided by (factor minus 1.0)
+end action
+
+set payment to monthly payment with amount, rate, years
+set months to years times 12
+set total paid to payment times months
+
+say "Loan amount:     R" plus amount
+say "Interest rate:   " plus rate plus "% per year"
+say "Term:            " plus years plus " years (" plus months plus " payments)"
+say "Monthly payment: R" plus payment
+say "Total paid:      R" plus total paid
+say "Total interest:  R" plus (total paid minus amount)
+
+# --- The project proves itself ---
+
+test "zero interest is simple division"
+    expect monthly payment with 12000.0, 0.0, 1 to be 1000
+end test
+
+test "R250k at 11.5% over 20 years is about R2666 per month"
+    expect monthly payment with 250000.0, 11.5, 20 to be at least 2660
+    expect monthly payment with 250000.0, 11.5, 20 to be at most 2672
+end test

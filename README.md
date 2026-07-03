@@ -91,27 +91,34 @@ messages — **never a raw Go error**.
 ## Quick start
 
 You need **[Go 1.22+](https://go.dev/dl/)** (hotgrin uses the Go toolchain
-under the hood).
+under the hood). Then one line installs the command:
 
 ```bash
-git clone https://github.com/Hotgrin/hotgrin
-cd hotgrin
-go build -o hotgrin ./cmd/hotgrin
-
-./hotgrin run    examples/hello.hot          # run it
-./hotgrin test   examples/calc.hot           # run its tests
-./hotgrin check  examples/hello.hot          # check for problems (--af for Afrikaans)
-./hotgrin build  --windows examples/shop.hot # make a Windows .exe
-./hotgrin reveal examples/hello.hot          # show the Go it becomes
+go install github.com/hotgrin/hotgrin/cmd/hotgrin@latest
 ```
 
-Prefer Docker? `docker build -t hotgrin .` then
-`docker run --rm -v "$PWD":/work hotgrin run hello.hot`.
+Make a file called `hello.hot` containing `say "Hello, world"`, and:
 
-**New to programming?** Start with the [gentle tutorial](docs/tutorial.md).
-**Coming from another language?** The
+```bash
+hotgrin run    hello.hot            # run it
+hotgrin check  hello.hot            # check for problems (--af for Afrikaans)
+hotgrin build  --windows hello.hot  # make a Windows .exe you can share
+hotgrin reveal hello.hot            # show the Go it becomes
+```
+
+Prebuilt binaries are on the
+[releases page](https://github.com/Hotgrin/hotgrin/releases/latest); full
+options (including Docker and building from source) are in
+**[Getting started](docs/getting-started.md)**.
+
+**New to programming?** Start with the [gentle tutorial](docs/tutorial.md),
+then raid the **[cookbook](docs/cookbook.md)** — 15 copy-paste recipes that all
+run as shown. **Coming from another language?** The
 [language reference](docs/language-reference.md) covers every construct and its
-Go mapping.
+Go mapping. **Want a real example?** The
+[loan calculator](examples/projects/loan-calculator/) is a complete worked
+project with tests. And the **[roadmap](ROADMAP.md)** shows where hotgrin is
+going.
 
 ---
 
