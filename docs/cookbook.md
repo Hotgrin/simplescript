@@ -236,6 +236,35 @@ say replace all with clean, "world", "boet"
 say "letters: " plus (text length with clean)
 ```
 
+## 20. Measure things properly
+
+```
+set weight to 129 kg
+say "Weight: " plus weight
+say "In grams: " plus (weight in g)
+
+set walk to 2 km plus 500 m
+say "Walk: " plus walk
+
+if 90 min is greater than 1 h
+    say "That is more than an hour"
+end if
+```
+
+## 21. Ask the internet a question
+
+```
+use "std/web"
+
+try
+    set doc to fetch text with "https://registry.npmjs.org/left-pad/1.3.0"
+    say json value with doc, "name"
+    say json value with doc, "description"
+if it fails
+    say "Could not fetch: " plus the problem
+end try
+```
+
 ---
 
 Want a recipe that isn't here? [Open an issue](https://github.com/Hotgrin/hotgrin/issues)

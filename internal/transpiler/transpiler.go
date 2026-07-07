@@ -17,6 +17,7 @@ import (
 
 	"github.com/hotgrin/hotgrin/internal/ast"
 	"github.com/hotgrin/hotgrin/internal/gobridge"
+	"github.com/hotgrin/hotgrin/internal/units"
 )
 
 // --- types --------------------------------------------------------------
@@ -35,6 +36,8 @@ var (
 	tUnknown = ssType{kind: "unknown"}
 )
 
+func tUnit(u string) ssType { return ssType{kind: "unit", name: u} }
+
 func (t ssType) goName() string {
 	switch t.kind {
 	case "int":
@@ -52,6 +55,8 @@ func (t ssType) goName() string {
 		return "[]any"
 	case "record":
 		return t.name
+	case "unit":
+		return "float64"
 	}
 	return "any"
 }
@@ -212,6 +217,10 @@ func (t *Transpiler) Transpile() (string, string, []string) {
 	}
 
 	return mainSrc, testSrc, t.errors
+}
+
+func (t *Transpiler) errorf(line int, format string, args ...any) {
+	t.errors = append(t.errors, fmt.Sprintf("line %d: ", line)+fmt.Sprintf(format, args...))
 }
 
 func (t *Transpiler) format(src string) string {
@@ -714,6 +723,10 @@ func (t *Transpiler) typeOf(e ast.Expr) ssType {
 		return tBool
 	case *ast.NothingLit:
 		return tUnknown
+	case *ast.UnitLit:
+		return tUnit(x.Unit)
+	case *ast.ConvExpr:
+		return tUnit(x.Unit)
 	case *ast.Identifier:
 		if ty, ok := t.scope[sanitize(x.Name)]; ok {
 			return ty
@@ -761,11 +774,24 @@ func (t *Transpiler) binaryType(x *ast.BinaryExpr) ssType {
 	case "and", "or", "=", "!=", ">", "<", ">=", "<=", "contains":
 		return tBool
 	case "/":
+		lt, rt := t.typeOf(x.Left), t.typeOf(x.Right)
+		if lt.kind == "unit" && rt.kind == "unit" {
+			return tFloat // km / km = a plain ratio
+		}
+		if lt.kind == "unit" {
+			return lt // unit / number keeps the unit
+		}
 		return tFloat
 	case "+":
 		lt, rt := t.typeOf(x.Left), t.typeOf(x.Right)
 		if lt.kind == "string" || rt.kind == "string" {
 			return tString
+		}
+		if lt.kind == "unit" || rt.kind == "unit" {
+			if lt.kind == "unit" {
+				return lt // result stays in the left operand's unit
+			}
+			return rt
 		}
 		if lt.kind == "float" || rt.kind == "float" {
 			return tFloat
@@ -773,6 +799,12 @@ func (t *Transpiler) binaryType(x *ast.BinaryExpr) ssType {
 		return tInt
 	case "-", "*":
 		lt, rt := t.typeOf(x.Left), t.typeOf(x.Right)
+		if lt.kind == "unit" || rt.kind == "unit" {
+			if lt.kind == "unit" {
+				return lt
+			}
+			return rt
+		}
 		if lt.kind == "float" || rt.kind == "float" {
 			return tFloat
 		}
@@ -1058,6 +1090,9 @@ func (t *Transpiler) emitStmt(s ast.Stmt) string {
 	switch n := s.(type) {
 	case *ast.SayStmt:
 		t.needFmt = true
+		if ty := t.typeOf(n.Value); ty.kind == "unit" {
+			return "fmt.Println(" + t.emitExpr(n.Value) + ", " + strconv.Quote(ty.name) + ")"
+		}
 		return "fmt.Println(" + t.emitExpr(n.Value) + ")"
 
 	case *ast.SetStmt:
@@ -1373,6 +1408,27 @@ func (t *Transpiler) emitExpr(e ast.Expr) string {
 		return "false"
 	case *ast.NothingLit:
 		return "nil"
+	case *ast.UnitLit:
+		if strings.Contains(x.Value, ".") {
+			return x.Value
+		}
+		return x.Value + ".0" // measurements are decimals in Go
+	case *ast.ConvExpr:
+		xt := t.typeOf(x.X)
+		if xt.kind != "unit" {
+			t.errorf(x.Line, "'in %s' converts measurements, but this value has no unit", x.Unit)
+			return t.emitExpr(x.X)
+		}
+		from, _ := units.Lookup(xt.name)
+		to, _ := units.Lookup(x.Unit)
+		if from.Dim != to.Dim {
+			t.errorf(x.Line, "cannot convert %s to %s — one measures %s, the other %s", xt.name, x.Unit, from.Dim, to.Dim)
+			return t.emitExpr(x.X)
+		}
+		if from.Factor == to.Factor {
+			return t.emitExpr(x.X)
+		}
+		return "(" + t.emitExpr(x.X) + " * " + fmt.Sprintf("%v", from.Factor/to.Factor) + ")"
 	case *ast.Identifier:
 		name := sanitize(x.Name)
 		if _, isVar := t.scope[name]; !isVar {
@@ -1414,7 +1470,75 @@ func (t *Transpiler) emitExpr(e ast.Expr) string {
 	return "/* expr? */"
 }
 
+// unitCoerce prepares the two sides of an arithmetic/comparison op when units
+// are involved: same-dimension values are converted into the left unit; mixing
+// dimensions, or a unit with a bare number where it is ambiguous, is an error.
+func (t *Transpiler) unitCoerce(x *ast.BinaryExpr) (string, string, bool) {
+	lt, rt := t.typeOf(x.Left), t.typeOf(x.Right)
+	if lt.kind != "unit" && rt.kind != "unit" {
+		return "", "", false
+	}
+	if x.Op == "+" && (lt.kind == "string" || rt.kind == "string") {
+		return "", "", false // text joining handles units itself
+	}
+	le, re := t.emitExpr(x.Left), t.emitExpr(x.Right)
+	switch x.Op {
+	case "*", "/":
+		// scaling by a plain number is fine; unit*unit has no meaning yet
+		if lt.kind == "unit" && rt.kind == "unit" {
+			if x.Op == "*" {
+				t.errorf(x.Line, "multiplying %s by %s has no meaning here yet", lt.name, rt.name)
+				return le, re, true
+			}
+			// division of same dimension -> plain ratio
+			lu, _ := units.Lookup(lt.name)
+			ru, _ := units.Lookup(rt.name)
+			if lu.Dim != ru.Dim {
+				t.errorf(x.Line, "cannot divide %s by %s — one measures %s, the other %s", lt.name, rt.name, lu.Dim, ru.Dim)
+				return le, re, true
+			}
+			if lu.Factor != ru.Factor {
+				re = "(" + re + " * " + fmt.Sprintf("%v", ru.Factor/lu.Factor) + ")"
+			}
+			return le, re, true
+		}
+		if rt.kind == "int" {
+			re = "float64(" + re + ")"
+		}
+		if lt.kind == "int" {
+			le = "float64(" + le + ")"
+		}
+		return le, re, true
+	case "+", "-", "=", "!=", ">", "<", ">=", "<=":
+		if lt.kind != "unit" || rt.kind != "unit" {
+			t.errorf(x.Line, "a measurement and a plain number cannot be combined — write the unit on both (e.g. 500 g)")
+			return le, re, true
+		}
+		lu, _ := units.Lookup(lt.name)
+		ru, _ := units.Lookup(rt.name)
+		if lu.Dim != ru.Dim {
+			t.errorf(x.Line, "cannot combine %s and %s — one measures %s, the other %s", lt.name, rt.name, lu.Dim, ru.Dim)
+			return le, re, true
+		}
+		if lu.Factor != ru.Factor {
+			re = "(" + re + " * " + fmt.Sprintf("%v", ru.Factor/lu.Factor) + ")"
+		}
+		return le, re, true
+	}
+	return "", "", false
+}
+
 func (t *Transpiler) emitBinary(x *ast.BinaryExpr) string {
+	if le, re, handled := t.unitCoerce(x); handled {
+		switch x.Op {
+		case "+", "-", "*", "/":
+			return "(" + le + " " + x.Op + " " + re + ")"
+		case "=":
+			return "(" + le + " == " + re + ")"
+		default:
+			return "(" + le + " " + x.Op + " " + re + ")"
+		}
+	}
 	switch x.Op {
 	case "rounded":
 		t.needRound = true
@@ -1466,6 +1590,10 @@ func (t *Transpiler) numericBinary(op string, left, right ast.Expr) string {
 
 // stringify turns an operand into a Go string expression for "plus" joins.
 func (t *Transpiler) stringify(e ast.Expr, ty ssType) string {
+	if ty.kind == "unit" {
+		t.needFmt = true
+		return "fmt.Sprintf(\"%v \"+" + strconv.Quote(ty.name) + ", " + t.emitExpr(e) + ")"
+	}
 	if ty.kind == "string" {
 		return t.emitExpr(e)
 	}

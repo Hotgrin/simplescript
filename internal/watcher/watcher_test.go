@@ -125,6 +125,20 @@ func TestInputsAreKnownNames(t *testing.T) {
 	}
 }
 
+func TestVoidActionAsValue(t *testing.T) {
+	src := "action log it with msg\nsay msg\nend action\nset x to log it with \"hi\"\nsay x"
+	if !hasFinding(check(t, src), Error, "does not give anything back") {
+		t.Errorf("expected void-use error")
+	}
+	// but an action that gives back is fine
+	src2 := "action two\ngive back 2\nend action\nset x to two\nsay x"
+	for _, f := range check(t, src2) {
+		if f.Severity == Error {
+			t.Errorf("false positive on value action: %v", f)
+		}
+	}
+}
+
 func TestGoFuncsAreKnownActions(t *testing.T) {
 	src := "use go\nfunc luckyNumber() int { return 7 }\nend go\nsay lucky number"
 	if fs := check(t, src); len(fs) != 0 {

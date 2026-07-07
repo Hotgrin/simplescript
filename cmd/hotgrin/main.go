@@ -24,7 +24,7 @@ import (
 	"github.com/hotgrin/hotgrin/internal/watcher"
 )
 
-const version = "hotgrin 0.4.0"
+const version = "hotgrin 0.5.0"
 
 func main() {
 	af := false
@@ -158,8 +158,23 @@ func cmdCheck(file, lang string) {
 
 func cmdReveal(file, lang string) {
 	prog := load(file)
-	goSrc, _, _ := transpiler.New(prog).Transpile()
+	goSrc, _, terrs := transpiler.New(prog).Transpile()
+	reportTranspile(terrs)
 	fmt.Print(goSrc)
+}
+
+// reportTranspile prints problems the transpiler itself can prove (like
+// mixing kg and km) in the same friendly voice, and stops before Go ever
+// sees the program.
+func reportTranspile(errs []string) {
+	if len(errs) == 0 {
+		return
+	}
+	for _, e := range errs {
+		fmt.Fprintln(os.Stderr, "  error   "+e)
+	}
+	fmt.Fprintln(os.Stderr, "\nI found problems above, so I stopped. Fix those and try again.")
+	os.Exit(1)
 }
 
 func cmdRun(file, lang string, progArgs []string) {
@@ -168,7 +183,8 @@ func cmdRun(file, lang string, progArgs []string) {
 		fmt.Fprintln(os.Stderr, "\nI found problems above, so I didn't run it. Fix those and try again.")
 		os.Exit(1)
 	}
-	goSrc, _, _ := transpiler.New(prog).Transpile()
+	goSrc, _, terrs := transpiler.New(prog).Transpile()
+	reportTranspile(terrs)
 	dir := tempModule(goSrc)
 	defer os.RemoveAll(dir)
 
@@ -202,7 +218,8 @@ func cmdTest(file, lang string) {
 		fmt.Fprintln(os.Stderr, "\nI found problems above, so I didn't run the tests.")
 		os.Exit(1)
 	}
-	mainSrc, testSrc, _ := transpiler.New(prog).Transpile()
+	mainSrc, testSrc, terrs := transpiler.New(prog).Transpile()
+	reportTranspile(terrs)
 	if testSrc == "" {
 		fmt.Println("No tests found. Add a 'test \"...\" ... end test' block.")
 		return
@@ -231,7 +248,8 @@ func cmdBuild(file, lang string, windows bool) {
 		fmt.Fprintln(os.Stderr, "\nI found problems above, so I didn't build. Fix those and try again.")
 		os.Exit(1)
 	}
-	goSrc, _, _ := transpiler.New(prog).Transpile()
+	goSrc, _, terrs := transpiler.New(prog).Transpile()
+	reportTranspile(terrs)
 	dir := tempModule(goSrc)
 	defer os.RemoveAll(dir)
 

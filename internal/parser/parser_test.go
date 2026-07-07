@@ -40,6 +40,26 @@ func TestParseUse(t *testing.T) {
 	}
 }
 
+func TestParseUnits(t *testing.T) {
+	if got := parse(t, "set w to 129 kg"); !strings.Contains(got, "(unit 129 kg)") {
+		t.Errorf("unit literal not parsed: %s", got)
+	}
+	if got := parse(t, "say w in g"); !strings.Contains(got, "(in (id w) g)") {
+		t.Errorf("conversion not parsed: %s", got)
+	}
+	// aliases normalise; for-each 'in' unaffected
+	if got := parse(t, "set p to 90 minutes"); !strings.Contains(got, "(unit 90 min)") {
+		t.Errorf("alias not normalised: %s", got)
+	}
+	if got := parse(t, "repeat for each s in xs\nsay s\nend repeat"); !strings.Contains(got, "(for-each s (id xs)") {
+		t.Errorf("for-each in broken: %s", got)
+	}
+	// a non-unit word after a number stays a name usage
+	if got := parse(t, "set n to 5\nsay n"); !strings.Contains(got, "(num 5)") {
+		t.Errorf("plain number broken: %s", got)
+	}
+}
+
 func TestParseV03Features(t *testing.T) {
 	got := parse(t, "ask \"Name?\" into name\nstop with error \"bye\"")
 	for _, want := range []string{`(ask (str "Name?") into name)`, `(stop-with-error (str "bye"))`} {

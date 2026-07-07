@@ -139,6 +139,25 @@ func (ix *IndexExpr) String() string {
 	return "(item " + ix.Index.String() + " " + ix.Target.String() + ")"
 }
 
+// UnitLit is a measured value: 129 kg, 2.5 km.
+type UnitLit struct {
+	Value string
+	Unit  string // canonical unit name
+}
+
+func (u *UnitLit) exprNode()      {}
+func (u *UnitLit) String() string { return "(unit " + u.Value + " " + u.Unit + ")" }
+
+// ConvExpr converts a measured value to another unit: weight in g.
+type ConvExpr struct {
+	Line int
+	X    Expr
+	Unit string
+}
+
+func (c *ConvExpr) exprNode()      {}
+func (c *ConvExpr) String() string { return "(in " + c.X.String() + " " + c.Unit + ")" }
+
 // ListLit is "list of a, b, c".
 type ListLit struct{ Elements []Expr }
 

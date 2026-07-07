@@ -176,6 +176,30 @@ func TestSayFallibleInsideTry(t *testing.T) {
 	}
 }
 
+func TestUnits(t *testing.T) {
+	wants(t, "set w to 129 kg\nsay w", "w := 129.0", "fmt.Println(w, \"kg\")")
+	wants(t, "set w to 129 kg\nsay w in g", "(w * 1000)", "\"g\")")
+	// cross-unit arithmetic converts into the left unit
+	wants(t, "set d to 2 km plus 500 m\nsay d", "(2.0 + (500.0 * 0.001))")
+	// text joining shows the unit
+	wants(t, "set w to 129 kg\nsay \"W: \" plus w", "fmt.Sprintf(\"%v \"+\"kg\", w)")
+}
+
+func TestUnitDimensionErrors(t *testing.T) {
+	toks := lexer.New("set w to 1 kg\nset h to 1 m\nsay w plus h").Tokenize()
+	prog, _ := parser.New(toks).Parse()
+	_, _, errs := New(prog).Transpile()
+	if len(errs) == 0 || !strings.Contains(strings.Join(errs, " "), "mass") {
+		t.Errorf("expected a dimension error, got %v", errs)
+	}
+	toks2 := lexer.New("set w to 1 kg\nsay w plus 5").Tokenize()
+	prog2, _ := parser.New(toks2).Parse()
+	_, _, errs2 := New(prog2).Transpile()
+	if len(errs2) == 0 {
+		t.Error("expected an error mixing a unit and a bare number")
+	}
+}
+
 func TestUseGoBlock(t *testing.T) {
 	src := "use go\nimport \"math/rand\"\nfunc luckyNumber() int { return rand.Intn(100) }\nend go\nsay lucky number"
 	wants(t, src,

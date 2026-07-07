@@ -1,0 +1,51 @@
+# std/web — fetch text and JSON from the web.
+# Network calls can fail, so use these inside try blocks.
+
+use go
+import "io"
+import "net/http"
+import "fmt"
+import "encoding/json"
+import "strings"
+func fetchText(url string) (string, error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode >= 400 {
+		return "", fmt.Errorf("the server answered %s", resp.Status)
+	}
+	b, err := io.ReadAll(resp.Body)
+	return string(b), err
+}
+func jsonValue(doc string, path string) (string, error) {
+	var v any
+	if err := json.Unmarshal([]byte(doc), &v); err != nil {
+		return "", fmt.Errorf("that is not valid JSON: %v", err)
+	}
+	for _, key := range strings.Split(path, ".") {
+		m, ok := v.(map[string]any)
+		if !ok {
+			return "", fmt.Errorf("no %q here — the JSON has no such field", key)
+		}
+		v, ok = m[key]
+		if !ok {
+			return "", fmt.Errorf("the JSON has no field called %q", key)
+		}
+	}
+	switch x := v.(type) {
+	case string:
+		return x, nil
+	case float64:
+		if x == float64(int64(x)) {
+			return fmt.Sprintf("%d", int64(x)), nil
+		}
+		return fmt.Sprintf("%g", x), nil
+	case bool:
+		return fmt.Sprintf("%v", x), nil
+	}
+	b, _ := json.Marshal(v)
+	return string(b), nil
+}
+end go

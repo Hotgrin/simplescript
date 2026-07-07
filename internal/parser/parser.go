@@ -16,6 +16,7 @@ import (
 
 	"github.com/hotgrin/hotgrin/internal/ast"
 	"github.com/hotgrin/hotgrin/internal/lexer"
+	"github.com/hotgrin/hotgrin/internal/units"
 )
 
 // Error is a parse problem, with the line so messages can point at the source.
@@ -483,7 +484,7 @@ func infixPrec(t lexer.TokenType) int {
 	case lexer.IS, lexer.IS_NOT, lexer.IS_GREATER_THAN, lexer.IS_LESS_THAN,
 		lexer.IS_AT_LEAST, lexer.IS_AT_MOST, lexer.CONTAINS:
 		return 3
-	case lexer.ROUNDED_TO:
+	case lexer.ROUNDED_TO, lexer.IN:
 		return 4 // looser than arithmetic: "a plus b rounded to 2" rounds the sum
 	case lexer.PLUS, lexer.MINUS:
 		return 5
@@ -567,6 +568,17 @@ func (p *Parser) parseExpr(minPrec int) ast.Expr {
 		}
 
 		opLine := p.cur().Line
+		if op == lexer.IN {
+			p.advance()
+			tok := p.expect(lexer.IDENT)
+			u, ok := units.Lookup(tok.Literal)
+			if !ok {
+				p.errorf("'in' converts measurements, so %q must be a unit (kg, m, s, ...)", tok.Literal)
+				return left
+			}
+			left = &ast.ConvExpr{X: left, Unit: u.Name, Line: opLine}
+			continue
+		}
 		p.advance()
 		right := p.parseExpr(prec + 1) // left-associative
 		left = &ast.BinaryExpr{Op: opSymbol(op), Left: left, Right: right, Line: opLine}
@@ -578,7 +590,15 @@ func (p *Parser) parsePrimary() ast.Expr {
 	line := p.cur().Line
 	switch p.cur().Type {
 	case lexer.NUMBER:
-		return &ast.NumberLit{Value: p.advance().Literal}
+		num := p.advance().Literal
+		// "129 kg" — a number directly followed by a unit word is a measurement
+		if p.is(lexer.IDENT) {
+			if u, ok := units.Lookup(p.cur().Literal); ok {
+				p.advance()
+				return &ast.UnitLit{Value: num, Unit: u.Name}
+			}
+		}
+		return &ast.NumberLit{Value: num}
 	case lexer.STRING:
 		return &ast.StringLit{Value: p.advance().Literal}
 	case lexer.TRUE:

@@ -53,8 +53,16 @@ func transpileHot(this js.Value, args []js.Value) any {
 				"af":       f.Message("af"),
 			})
 		}
-		main, test, _ := transpiler.New(prog).Transpile()
+		main, test, terrs := transpiler.New(prog).Transpile()
 		goCode, testCode = main, test
+		for _, e := range terrs {
+			findings = append(findings, map[string]any{
+				"severity": "error", "line": 0, "en": e, "af": e,
+			})
+		}
+		if len(terrs) > 0 {
+			goCode, testCode = "", ""
+		}
 	}
 
 	return js.ValueOf(map[string]any{

@@ -77,6 +77,7 @@ Shipped inside hotgrin itself (no download):
   `text length`, `starts with`, `ends with`
 - `use "std/data"` — `read file`, `write file` (fallible — use `try`)
 - `use "std/random"` — `random up to`, `random between`
+- `use "std/web"` — `fetch text`, `json value` (fallible)
 
 They're written in hotgrin using `use go` — read them in
 [`internal/loader/std/`](../internal/loader/std/) as worked examples of this

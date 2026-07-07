@@ -20,15 +20,16 @@ libraries (`std/text`, `std/data`, `std/random`) · the
 [library-authoring guide](docs/library-guide.md). A `std/web` library (fetch
 JSON from APIs) moves to v0.5.
 
-## v0.5 — the headline features
+## v0.5 — the headline features ✅ shipped
 
-- **`std/web`** — fetch text/JSON from an API, built on the fallible bridge.
+**Units of measure** (`set weight to 129 kg`, cross-unit maths, `in`
+conversions, dimension mistakes caught before running) · **`std/web`**
+(`fetch text`, `json value`) · a new Watcher rule (using a give-nothing-back
+action as a value). See the [changelog](CHANGELOG.md).
 
-- **Units of measure** — `set weight to 129 kg`, with unit-aware maths and
-  conversions. Designed but deliberately parked until it can be done properly.
-- **Type annotations** — optional stated types; needs a syntax that survives
-  multi-word names (open design question).
-- **More Watcher rules** — always provable-only, never a false alarm.
+**Deferred deliberately:** optional type annotations — the syntax must survive
+multi-word names, and that design question deserves its own careful session
+rather than a rushed answer.
 
 ## Further out
 

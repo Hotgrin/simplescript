@@ -1,4 +1,4 @@
-# hotgrin language reference (v0.4)
+# hotgrin language reference (v0.5)
 
 A precise reference for the current implementation. For a gentle introduction,
 see the [tutorial](tutorial.md). hotgrin transpiles to Go; each section
@@ -155,6 +155,21 @@ stop with error "no file given"       # message to stderr, exit code 1
 ```
 `ask` always yields text; convert as needed. The Watcher treats code after
 `stop with error` as unreachable.
+
+### Units of measure
+```
+set weight to 129 kg
+say weight                       # 129 kg  (units print themselves)
+say weight in g                  # 129000 g
+set walk to 2 km plus 500 m      # 2.5 km  (converted into the left unit)
+if 90 min is greater than 1 h ...
+```
+Known units — mass: `mg g kg t` · length: `mm cm m km` · time:
+`ms s/seconds min/minutes h/hours` · volume: `ml l`. Same-dimension values
+combine and compare (the right side converts into the left side's unit);
+scaling by a plain number is fine (`weight times 2`); mixing dimensions, or
+adding a bare number to a measurement, is an error caught before the program
+runs. `x in <unit>` converts explicitly.
 
 ### Command-line inputs
 ```

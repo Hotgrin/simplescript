@@ -61,19 +61,21 @@ type actionInfo struct {
 
 // Watcher holds the program-level facts the rules need.
 type Watcher struct {
-	prog     *ast.Program
-	actions  map[string]actionInfo
-	records  map[string]map[string]bool // record name -> field set
-	fallible map[string]bool            // actions that can "give back problem"
-	findings []Finding
+	prog      *ast.Program
+	actions   map[string]actionInfo
+	records   map[string]map[string]bool // record name -> field set
+	fallible  map[string]bool            // actions that can "give back problem"
+	givesBack map[string]bool            // actions that give a value back
+	findings  []Finding
 }
 
 func New(prog *ast.Program) *Watcher {
 	return &Watcher{
-		prog:     prog,
-		actions:  map[string]actionInfo{},
-		records:  map[string]map[string]bool{},
-		fallible: map[string]bool{},
+		prog:      prog,
+		actions:   map[string]actionInfo{},
+		records:   map[string]map[string]bool{},
+		fallible:  map[string]bool{},
+		givesBack: map[string]bool{},
 	}
 }
 
@@ -129,6 +131,9 @@ func (w *Watcher) collect() {
 		if problemGiveBack(a.Body) {
 			w.fallible[a.Name] = true
 		}
+		if plainGiveBack(a.Body) {
+			w.givesBack[a.Name] = true
+		}
 		// duplicate parameter names
 		seen := map[string]bool{}
 		for _, p := range a.Params {
@@ -151,6 +156,10 @@ func (w *Watcher) collect() {
 				if f.Fallible {
 					w.fallible[spacedName(f.Name)] = true
 					w.fallible[f.Name] = true
+				}
+				if f.Ret != "" {
+					w.givesBack[spacedName(f.Name)] = true
+					w.givesBack[f.Name] = true
 				}
 			}
 		}
@@ -245,9 +254,11 @@ func (w *Watcher) checkBlock(stmts []ast.Stmt, names map[string]bool, inTry bool
 		}
 		switch n := s.(type) {
 		case *ast.SayStmt:
+			w.checkVoidUse(n.Value)
 			w.checkExpr(n.Value, names)
 		case *ast.SetStmt:
 			w.checkFallibleUse(n.Value, inTry)
+			w.checkVoidUse(n.Value)
 			w.checkExpr(n.Value, names)
 		case *ast.IncreaseStmt:
 			w.checkExpr(n.Target, names)
@@ -300,6 +311,18 @@ func (w *Watcher) checkBlock(stmts []ast.Stmt, names map[string]bool, inTry bool
 			if n.Expected != nil {
 				w.checkExpr(n.Expected, names)
 			}
+		}
+	}
+}
+
+// checkVoidUse flags using an action that never gives a value back where a
+// value is needed (set / say).
+func (w *Watcher) checkVoidUse(e ast.Expr) {
+	if call, ok := e.(*ast.CallExpr); ok {
+		if _, known := w.actions[call.Name]; known && !w.givesBack[call.Name] && !w.fallible[call.Name] {
+			w.add(Error, call.Line,
+				fmt.Sprintf("'%s' does not give anything back, so it can't be used as a value", call.Name),
+				fmt.Sprintf("'%s' gee niks terug nie, dus kan dit nie as 'n waarde gebruik word nie", call.Name))
 		}
 	}
 }
@@ -545,6 +568,44 @@ func isLiteral(e ast.Expr) bool {
 	switch e.(type) {
 	case *ast.NumberLit, *ast.StringLit, *ast.BoolLit:
 		return true
+	}
+	return false
+}
+
+// plainGiveBack reports whether a body gives a value back on some path.
+func plainGiveBack(stmts []ast.Stmt) bool {
+	for _, s := range stmts {
+		switch n := s.(type) {
+		case *ast.GiveBackStmt:
+			if !n.Problem {
+				return true
+			}
+		case *ast.IfStmt:
+			for _, c := range n.Clauses {
+				if plainGiveBack(c.Body) {
+					return true
+				}
+			}
+			if plainGiveBack(n.Else) {
+				return true
+			}
+		case *ast.RepeatTimesStmt:
+			if plainGiveBack(n.Body) {
+				return true
+			}
+		case *ast.RepeatWhileStmt:
+			if plainGiveBack(n.Body) {
+				return true
+			}
+		case *ast.ForEachStmt:
+			if plainGiveBack(n.Body) {
+				return true
+			}
+		case *ast.TryStmt:
+			if plainGiveBack(n.Body) || plainGiveBack(n.Handler) {
+				return true
+			}
+		}
 	}
 	return false
 }

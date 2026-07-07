@@ -3,6 +3,28 @@
 All notable changes to hotgrin are recorded here. This project follows
 [Semantic Versioning](https://semver.org/) loosely while it is pre-1.0.
 
+## [0.5.0] - 2026-07-07
+
+The headline release: measurements are part of the language.
+
+### Added
+- **Units of measure** — `set weight to 129 kg`. Measurements print
+  themselves (`129 kg`), join text naturally, convert with `in`
+  (`weight in g`), and combine across units of the same dimension
+  (`2 km plus 500 m` is `2.5 km`; `90 min is greater than 1 h` works).
+  Mass, length, time, and volume ship first.
+- **Dimension safety** — adding kg to metres, or a bare number to a
+  measurement, is caught kindly *before* the program runs.
+- **`std/web`** — `fetch text with <url>` and
+  `json value with <doc>, "dotted.path"`, both fallible, verified against a
+  live API.
+- **New Watcher rule** — using an action that gives nothing back as a value
+  is a provable mistake, now explained in both languages.
+
+### Deferred
+- Optional type annotations move out of v0.5: the syntax has to coexist with
+  multi-word names, and that deserves an unhurried design.
+
 ## [0.4.0] - 2026-07-06
 
 The ecosystem door: hotgrin programs can now use each other's code — and all
