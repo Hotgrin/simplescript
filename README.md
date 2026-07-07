@@ -222,6 +222,15 @@ some things are not built yet. Expect rough edges — and please
 libraries (`use ... from "github.com/..."`), interactive `ask` prompts, a richer
 standard library, and the optional Assessor / AI-mentor checking layers.
 
+## hotgrin + AI assistants
+
+hotgrin is newer than most AI models' training data. To have Claude, ChatGPT,
+Gemini, or any other assistant write correct hotgrin, paste
+**[the AI prompt pack](docs/ai-prompt-pack.md)** into the chat first — it's a
+complete spec written for AIs, and every rule in it is machine-verified.
+There's also an [llms.txt](llms.txt) and [AGENTS.md](AGENTS.md) for tools that
+look for them.
+
 ## Contributing
 
 Contributions are very welcome — see [CONTRIBUTING.md](CONTRIBUTING.md). Two house

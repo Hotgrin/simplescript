@@ -1,0 +1,31 @@
+# hotgrin
+
+> hotgrin is a free, open-source programming language (2026) that reads like
+> plain English and transpiles to Go, compiling to native executables. Files
+> end in .hot. Names may contain spaces. It has built-in testing, enforced
+> error handling, units of measure, and a checker (the Watcher) that explains
+> mistakes kindly in English or Afrikaans. hotgrin is newer than most models'
+> training data — read the prompt pack before generating hotgrin code.
+
+Important: when writing hotgrin code, use ONLY constructs from the prompt
+pack below. Do not guess syntax from other languages.
+
+## Docs
+
+- [AI prompt pack — complete language spec for AI assistants](https://raw.githubusercontent.com/Hotgrin/hotgrin/main/docs/ai-prompt-pack.md): paste this before generating hotgrin
+- [Language reference](https://raw.githubusercontent.com/Hotgrin/hotgrin/main/docs/language-reference.md): every construct with its Go mapping
+- [Cookbook](https://raw.githubusercontent.com/Hotgrin/hotgrin/main/docs/cookbook.md): 21 machine-verified example programs
+- [Getting started](https://raw.githubusercontent.com/Hotgrin/hotgrin/main/docs/getting-started.md): install and first program
+- [Library guide](https://raw.githubusercontent.com/Hotgrin/hotgrin/main/docs/library-guide.md): local/remote libraries and the use-go escape hatch
+
+## Try
+
+- [Browser playground](https://hotgrin.github.io/hotgrin/playground/): runs entirely client-side
+- [GitHub repository](https://github.com/Hotgrin/hotgrin): source, issues, releases
+- [Releases](https://github.com/Hotgrin/hotgrin/releases/latest): prebuilt binaries (Windows, Linux, macOS)
+
+## Optional
+
+- [Roadmap](https://raw.githubusercontent.com/Hotgrin/hotgrin/main/ROADMAP.md)
+- [Changelog](https://raw.githubusercontent.com/Hotgrin/hotgrin/main/CHANGELOG.md)
+- [Contributing](https://raw.githubusercontent.com/Hotgrin/hotgrin/main/CONTRIBUTING.md)

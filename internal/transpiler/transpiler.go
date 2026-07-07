@@ -1018,12 +1018,15 @@ func inputType(typ string) ssType {
 func (t *Transpiler) emitTry(n *ast.TryStmt) string {
 	var b strings.Builder
 	b.WriteString("err := func() error {\n")
+	savedScope, savedDecl := t.snapshot()
 	for _, s := range n.Body {
 		b.WriteString(t.emitTryStmt(s))
 		b.WriteString("\n")
 	}
+	t.restore(savedScope, savedDecl)
 	b.WriteString("return nil\n}()\n")
 	b.WriteString("if err != nil {\n")
+	savedScope, savedDecl = t.snapshot()
 	t.scope["theProblem"] = tString
 	t.declared["theProblem"] = true
 	b.WriteString("theProblem := err.Error()\n_ = theProblem\n")
@@ -1031,8 +1034,28 @@ func (t *Transpiler) emitTry(n *ast.TryStmt) string {
 		b.WriteString(t.emitStmt(s))
 		b.WriteString("\n")
 	}
+	t.restore(savedScope, savedDecl)
 	b.WriteString("}")
 	return b.String()
+}
+
+// snapshot copies the current scope/declared maps so a nested Go scope (a try
+// closure or handler) can declare freely without leaking into siblings.
+func (t *Transpiler) snapshot() (map[string]ssType, map[string]bool) {
+	sc := make(map[string]ssType, len(t.scope))
+	for k, v := range t.scope {
+		sc[k] = v
+	}
+	dc := make(map[string]bool, len(t.declared))
+	for k, v := range t.declared {
+		dc[k] = v
+	}
+	return sc, dc
+}
+
+func (t *Transpiler) restore(sc map[string]ssType, dc map[string]bool) {
+	t.scope = sc
+	t.declared = dc
 }
 
 // emitTryStmt emits a statement inside a try body, special-casing fallible
@@ -1044,8 +1067,15 @@ func (t *Transpiler) emitTryStmt(s ast.Stmt) string {
 			if sig, ok := t.funcs[sanitize(call.Name)]; ok && sig.fallible {
 				v := sanitize(n.Name)
 				t.scope[v] = sig.ret
+				ev := fmt.Sprintf("err%d", t.uid())
+				if t.declared[v] {
+					// already declared: plain assignment with a fresh error var
+					return "var " + ev + " error\n" + v + ", " + ev + " = " + t.emitCall(call) +
+						"\nif " + ev + " != nil {\nreturn " + ev + "\n}"
+				}
 				t.declared[v] = true
-				return v + ", err := " + t.emitCall(call) + "\nif err != nil {\nreturn err\n}"
+				return v + ", " + ev + " := " + t.emitCall(call) +
+					"\nif " + ev + " != nil {\nreturn " + ev + "\n}"
 			}
 		}
 	case *ast.ExprStmt:

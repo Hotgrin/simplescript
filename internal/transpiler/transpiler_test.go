@@ -1,6 +1,7 @@
 package transpiler
 
 import (
+	"regexp"
 	"strings"
 	"testing"
 
@@ -213,10 +214,33 @@ func TestUseGoBlock(t *testing.T) {
 	}
 }
 
+func TestRepeatedFallibleSetSameVar(t *testing.T) {
+	// Two fallible sets of the SAME variable in one try body must not emit a
+	// duplicate := (found by the AI prompt-pack QA). The second becomes "=".
+	fall := "action risky with p\nif p is 0\ngive back problem \"no\"\nend if\ngive back p\nend action\n"
+	src := fall +
+		"try\nset saved to risky with 1\nset saved to risky with 2\nsay saved\n" +
+		"if it fails\nsay the problem\nend try"
+	out := gen(t, src)
+	if len(regexp.MustCompile(`saved, err\d+ :=`).FindAllString(out, -1)) != 1 ||
+		len(regexp.MustCompile(`saved, err\d+ =[^=]`).FindAllString(out, -1)) != 1 {
+		t.Errorf("want exactly one := and one = for repeated set:\n%s", out)
+	}
+	// Sibling try scopes must not leak declarations into each other.
+	src2 := fall +
+		"try\nset saved to risky with 1\nsay saved\n" +
+		"if it fails\ntry\nset saved to risky with 2\nsay saved\n" +
+		"if it fails\nsay the problem\nend try\nend try"
+	out2 := gen(t, src2)
+	if len(regexp.MustCompile(`saved, err\d+ :=`).FindAllString(out2, -1)) != 2 {
+		t.Errorf("sibling closures must each declare independently:\n%s", out2)
+	}
+}
+
 func TestGoFallibleBridge(t *testing.T) {
 	src := "use go\nimport \"os\"\nfunc readFile(p string) (string, error) { b, e := os.ReadFile(p); return string(b), e }\nend go\n" +
 		"try\nset c to read file with \"x.txt\"\nsay c\nif it fails\nsay the problem\nend try"
-	wants(t, src, "c, err := readFile(\"x.txt\")", "if err != nil")
+	wants(t, src, "c, err0 := readFile(\"x.txt\")", "if err0 != nil")
 }
 
 func TestAskStopRounded(t *testing.T) {
@@ -254,8 +278,8 @@ func TestErrorHandling(t *testing.T) {
 		"errors.New(\"no zero\")",        // problem path
 		"return x, nil",                  // value path returns nil error
 		"\"errors\"",                     // import
-		"r, err := risky(5)",             // checked call inside try
-		"if err != nil",
+		"r, err0 := risky(5)",            // checked call inside try
+		"if err0 != nil",
 		"theProblem := err.Error()",
 	)
 }
