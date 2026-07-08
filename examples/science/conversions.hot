@@ -1,0 +1,9 @@
+# Unit conversions the way you'd say them.
+
+say 129 kg in g
+say 2.5 km in m
+say 90 min in h
+say 1.5 l in ml
+
+set marathon to 42.195 km
+say "A marathon is " plus (marathon in m) plus " — about " plus (marathon in km)

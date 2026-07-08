@@ -24,7 +24,7 @@ named `cart total`. Names are bounded by reserved words (`to`, `of`, `with`,
 
 ## Types (inferred — never annotated)
 
-whole numbers (`42`), decimals (`3.14`), text (`"hi"` or `'hi'`), truth
+whole numbers (`42`), decimals (`3.14`), text (`"hi"` or `'hi'`; escapes `\n` `\t` `\"` `\\` work), truth
 (`true`/`yes`, `false`/`no`), `nothing`, lists, records, measurements.
 There is NO type annotation syntax. The first `set` declares a variable;
 later `set`s reassign. A list's elements must share one type.
@@ -136,7 +136,9 @@ Units — mass: `mg g kg t` · length: `mm cm m km` · time: `ms s seconds min
 minutes h hours` · volume: `ml l`. Rules: same-dimension values combine and
 compare; `unit times/divided by plain-number` is fine; `unit plus/minus
 plain-number` is an ERROR (write the unit on both sides); mixing dimensions
-(kg with m) is an ERROR; `unit times unit` is an ERROR.
+in plus/minus/comparisons (kg with m) is an ERROR; `unit times unit` is an
+ERROR; `unit divided by unit` of DIFFERENT dimensions gives a plain number:
+the rate in base units (`5 km divided by 25 min` = metres per second).
 
 ## Standard libraries (exact action names)
 
@@ -175,6 +177,14 @@ plain-number` is an ERROR (write the unit on both sides); mixing dimensions
 10. **There is no `while`, `for`, `func`, `return`, `elif`, `print`, `import`
     keyword.** The words are `repeat while`, `repeat for each`, `action`,
     `give back`, `else if`, `say`, `use`.
+11. **A fallible call must be the WHOLE value:** `set r to risky with 1` then
+    use `r`. Never nest it: `say "x" plus risky with 1` is an error.
+12. **Top-level variables are NOT visible inside actions.** An action sees
+    only its parameters and its own locals — pass in everything it needs.
+13. **Reserved words can never appear inside names.** Common traps: `of`,
+    `in`, `to`, `with`, `is`, `from`, `start`, `times`, `item`, `count`,
+    `by`, `into`, `as`. So
+    `percent of` and a parameter called `start` are both invalid names.
 
 ## Verified example (uses much of the language)
 

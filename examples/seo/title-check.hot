@@ -1,0 +1,22 @@
+# Fetch a page and check its <title> the way an SEO tool would.
+#   hotgrin run title-check.hot --url "https://your-site.com/some-page"
+
+use "std/web"
+use "std/text"
+
+input url as text default "https://github.com/Hotgrin/hotgrin"
+
+try
+    set page to fetch text with url
+    set title to text between with page, "<title>", "</title>"
+    set size to text length with title
+    say "Title: " plus trim spaces with title
+    say "Length: " plus size plus " characters"
+    if size is greater than 60
+        say "Tip: search engines often cut titles longer than 60 characters."
+    else
+        say "Length looks good."
+    end if
+if it fails
+    say "Could not check: " plus the problem
+end try

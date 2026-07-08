@@ -1,0 +1,20 @@
+# How long until I reach my savings goal?
+#   hotgrin run savings-goal.hot --goal 50000 --monthly 1500 --rate 7
+
+input goal as decimal default 50000
+input monthly as decimal default 1500
+input rate as decimal default 7
+
+set balance to 0.0
+set months to 0
+set monthly rate to rate divided by 100 divided by 12
+
+repeat while balance is less than goal
+    set balance to balance plus monthly
+    set balance to balance plus (balance times monthly rate)
+    increase months by 1
+end repeat
+
+say "Saving R" plus monthly plus " per month at " plus rate plus "%:"
+say "You reach R" plus goal plus " in " plus months plus " months"
+say "Final balance: R" plus (balance rounded to 2)

@@ -1,0 +1,27 @@
+# Send an email through any SMTP server (Go's net/smtp, via the escape hatch).
+#   hotgrin run send-mail.hot --server "smtp.yourhost.com:587" --sender you@x.com --target them@y.com
+# Note: most servers need authentication - this example shows the plain-SMTP shape.
+
+use go
+import "net/smtp"
+import "fmt"
+func sendMail(server string, from string, target string, subject string, body string) (string, error) {
+	msg := []byte(fmt.Sprintf("From: %s\r\nTo: %s\r\nSubject: %s\r\n\r\n%s\r\n", from, target, subject, body))
+	err := smtp.SendMail(server, nil, from, []string{target}, msg)
+	if err != nil {
+		return "", err
+	}
+	return "sent", nil
+}
+end go
+
+input server as text default "localhost:2525"
+input sender as text default "me@example.com"
+input target as text default "you@example.com"
+
+try
+    set result to send mail with server, sender, target, "Hello from hotgrin", "This mail was sent by a program that reads like English."
+    say "Mail " plus result plus "!"
+if it fails
+    say "Could not send: " plus the problem
+end try

@@ -1,0 +1,17 @@
+# Everyday percentage maths, readable at a glance.
+
+action share percent with part, whole
+    give back part divided by whole times 100
+end action
+
+action change percent with old, new
+    give back (new minus old) divided by old times 100
+end action
+
+say "32 out of 40 is " plus (share percent with 32, 40 rounded to 1) plus "%"
+say "Price change 250 -> 199: " plus (change percent with 250, 199 rounded to 1) plus "%"
+
+test "percentage maths works"
+    expect share percent with 50, 200 to be 25
+    expect change percent with 100, 150 to be 50
+end test

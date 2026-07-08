@@ -1,0 +1,24 @@
+# Generate a real HTML report you can open in a browser.
+
+use "std/data"
+
+set title to "Weekly Sales"
+set sales to list of 12500, 9800, 15200, 11000
+
+set total to 0
+set rows to ""
+set day to 1
+repeat for each s in sales
+    set rows to rows plus "<tr><td>Day " plus day plus "</td><td>R" plus s plus "</td></tr>\n"
+    set total to total plus s
+    increase day by 1
+end repeat
+
+set page to "<!DOCTYPE html>\n<html><head><title>" plus title plus "</title></head>\n<body>\n<h1>" plus title plus "</h1>\n<table border='1'>\n" plus rows plus "<tr><th>Total</th><th>R" plus total plus "</th></tr>\n</table>\n</body></html>"
+
+try
+    set saved to write file with "report.html", page
+    say "Wrote " plus saved plus " — open it in your browser!"
+if it fails
+    say "Could not write: " plus the problem
+end try

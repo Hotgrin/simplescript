@@ -176,3 +176,17 @@ func TestLineNumbers(t *testing.T) {
 		t.Errorf("expected 'three' on line 3, got line %d", last.Line)
 	}
 }
+
+func TestStringEscapes(t *testing.T) {
+	toks := New(`say "line one\nline two\ttabbed \"quoted\""`).Tokenize()
+	got := ""
+	for _, tk := range toks {
+		if tk.Type == STRING {
+			got = tk.Literal
+		}
+	}
+	want := "line one\nline two\ttabbed \"quoted\""
+	if got != want {
+		t.Errorf("escapes wrong: got %q want %q", got, want)
+	}
+}

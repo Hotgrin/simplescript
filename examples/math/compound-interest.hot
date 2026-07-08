@@ -1,0 +1,24 @@
+# Compound interest: what will savings grow to?
+#   hotgrin run compound-interest.hot --amount 10000 --rate 8.5 --years 10
+
+input amount as decimal default 10000
+input rate as decimal default 8.5
+input years as whole default 10
+
+action future value with opening amount, yearly rate, term
+    set value to opening amount
+    repeat term times
+        set value to value plus (value times yearly rate divided by 100)
+    end repeat
+    give back value
+end action
+
+set result to future value with amount, rate, years
+say "R" plus amount plus " at " plus rate plus "% for " plus years plus " years:"
+say "R" plus (result rounded to 2)
+say "Growth: R" plus (result minus amount rounded to 2)
+
+test "10% roughly doubles in 7 years"
+    expect future value with 1000.0, 10.0, 7 to be at least 1948
+    expect future value with 1000.0, 10.0, 7 to be at most 1950
+end test

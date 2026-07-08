@@ -125,6 +125,21 @@ func TestInputsAreKnownNames(t *testing.T) {
 	}
 }
 
+func TestNestedFallibleCall(t *testing.T) {
+	fall := "action risky with p\nif p is 0\ngive back problem \"no\"\nend if\ngive back p\nend action\n"
+	src := fall + "try\nsay \"x: \" plus risky with 1\nif it fails\nsay the problem\nend try"
+	if !hasFinding(check(t, src), Error, "bigger calculation") {
+		t.Errorf("expected nested-fallible error")
+	}
+	// direct set/say of a fallible call stays fine
+	ok := fall + "try\nset r to risky with 1\nsay r\nif it fails\nsay the problem\nend try"
+	for _, f := range check(t, ok) {
+		if f.Severity == Error {
+			t.Errorf("false positive on direct fallible set: %v", f)
+		}
+	}
+}
+
 func TestVoidActionAsValue(t *testing.T) {
 	src := "action log it with msg\nsay msg\nend action\nset x to log it with \"hi\"\nsay x"
 	if !hasFinding(check(t, src), Error, "does not give anything back") {

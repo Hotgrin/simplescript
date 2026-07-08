@@ -1,0 +1,14 @@
+# Find-and-replace across a whole file.
+
+use "std/data"
+use "std/text"
+
+try
+    set saved to write file with "letter.txt", "Dear NAME, welcome to the club, NAME!"
+    set letter to read file with "letter.txt"
+    set final to replace all with letter, "NAME", "Adriaan"
+    set saved to write file with "letter.txt", final
+    say final
+if it fails
+    say "File problem: " plus the problem
+end try

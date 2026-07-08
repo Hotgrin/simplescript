@@ -1,0 +1,16 @@
+# Scale a recipe up or down, keeping units honest.
+#   hotgrin run recipe-scale.hot --servings 6
+
+input servings as whole default 6
+
+set base servings to 4
+set flour to 500 g
+set milk to 300 ml
+set butter to 125 g
+
+set factor to servings divided by base servings
+
+say "Recipe scaled from " plus base servings plus " to " plus servings plus " servings:"
+say "Flour:  " plus (flour times factor)
+say "Milk:   " plus (milk times factor)
+say "Butter: " plus (butter times factor)

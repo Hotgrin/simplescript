@@ -1,0 +1,23 @@
+# Basic statistics over a list: total, average, highest, lowest.
+
+set marks to list of 67, 82, 45, 91, 78, 55
+
+set total to 0
+set highest to 0
+set lowest to 1000
+
+repeat for each m in marks
+    set total to total plus m
+    if m is greater than highest
+        set highest to m
+    end if
+    if m is less than lowest
+        set lowest to m
+    end if
+end repeat
+
+say "Count:   " plus count of marks
+say "Total:   " plus total
+say "Average: " plus (total divided by count of marks rounded to 1)
+say "Highest: " plus highest
+say "Lowest:  " plus lowest

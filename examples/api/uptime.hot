@@ -1,0 +1,14 @@
+# A tiny uptime checker: is the service answering?
+
+use "std/web"
+
+set services to list of "https://github.com", "https://registry.npmjs.org"
+
+repeat for each s in services
+    try
+        fetch text with s
+        say "UP      " plus s
+    if it fails
+        say "DOWN    " plus s plus " — " plus the problem
+    end try
+end repeat

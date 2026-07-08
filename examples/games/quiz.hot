@@ -1,0 +1,22 @@
+# A little quiz with a score. Answers are text - type them exactly.
+
+ask "Which planet is known as the red planet?" into a1
+ask "What is the capital of South Africa's Western Cape?" into a2
+
+set score to 0
+
+if a1 is "Mars"
+    increase score by 1
+    say "Correct!"
+else
+    say "It was Mars."
+end if
+
+if a2 is "Cape Town"
+    increase score by 1
+    say "Correct!"
+else
+    say "It was Cape Town."
+end if
+
+say "You scored " plus score plus " out of 2"

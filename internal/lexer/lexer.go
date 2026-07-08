@@ -122,11 +122,26 @@ func lineToAtoms(line string) []atom {
 		case c == '"' || c == '\'':
 			quote := c
 			i++ // skip opening quote
-			start := i
+			var sb []rune
 			for i < len(r) && r[i] != quote {
+				if r[i] == '\\' && i+1 < len(r) {
+					switch r[i+1] {
+					case 'n':
+						sb = append(sb, '\n')
+					case 't':
+						sb = append(sb, '\t')
+					case '\\', '"', '\'':
+						sb = append(sb, r[i+1])
+					default: // unknown escape: keep both characters
+						sb = append(sb, r[i], r[i+1])
+					}
+					i += 2
+					continue
+				}
+				sb = append(sb, r[i])
 				i++
 			}
-			atoms = append(atoms, atom{atomString, string(r[start:i])})
+			atoms = append(atoms, atom{atomString, string(sb)})
 			if i < len(r) {
 				i++ // skip closing quote
 			}

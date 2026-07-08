@@ -1,0 +1,14 @@
+# Count words and characters in text.
+
+use "std/text"
+
+set passage to "The quick brown fox jumps over the lazy dog"
+
+set letters to text length with passage
+set squeezed to replace all with passage, " ", ""
+set bare letters to text length with squeezed
+set words to letters minus bare letters plus 1
+
+say "Text:       " plus passage
+say "Characters: " plus letters
+say "Words:      " plus words

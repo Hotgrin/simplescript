@@ -6,7 +6,10 @@ English — and compiles to a real, fast program.
 [![build](https://github.com/Hotgrin/hotgrin/actions/workflows/test.yml/badge.svg)](https://github.com/Hotgrin/hotgrin/actions/workflows/test.yml)
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Go 1.22+](https://img.shields.io/badge/Go-1.22%2B-00ADD8.svg)](https://go.dev/dl/)
-![status: alpha](https://img.shields.io/badge/status-v0.2%20alpha-orange.svg)
+[![release](https://img.shields.io/github/v/release/Hotgrin/hotgrin?color=B8374F)](https://github.com/Hotgrin/hotgrin/releases/latest)
+[![downloads](https://img.shields.io/github/downloads/Hotgrin/hotgrin/total)](https://github.com/Hotgrin/hotgrin/releases)
+[![Go Report Card](https://goreportcard.com/badge/github.com/hotgrin/hotgrin)](https://goreportcard.com/report/github.com/hotgrin/hotgrin)
+![status: alpha](https://img.shields.io/badge/status-alpha-orange.svg)
 
 > hotgrin is for people who want to *make* something without first learning
 > punctuation-heavy syntax. You write near-English; it transpiles to **Go** and
@@ -112,12 +115,12 @@ options (including Docker and building from source) are in
 **[Getting started](docs/getting-started.md)**.
 
 **New to programming?** Start with the [gentle tutorial](docs/tutorial.md),
-then raid the **[cookbook](docs/cookbook.md)** — 15 copy-paste recipes that all
+then raid the **[cookbook](docs/cookbook.md)** — 21 copy-paste recipes that all
 run as shown. **Coming from another language?** The
 [language reference](docs/language-reference.md) covers every construct and its
 Go mapping. **Want a real example?** The
-[loan calculator](examples/projects/loan-calculator/) is a complete worked
-project with tests. And the **[roadmap](ROADMAP.md)** shows where hotgrin is
+[invoice maker](examples/projects/invoice-maker/) is a complete worked
+project — heavily commented, with a full beginner walkthrough and tests. And the **[roadmap](ROADMAP.md)** shows where hotgrin is
 going.
 
 ---
@@ -212,15 +215,36 @@ hotgrin run greet.hot --name AJ
 
 ## Status
 
-**v0.2 — early alpha.** *(Renamed from "SimpleScript" in v0.2 — same language,
-better name.)* The language works end to end and is well tested (70+
-tests across six packages), but it is young: the standard library is tiny, and
-some things are not built yet. Expect rough edges — and please
+**Early alpha** (see the [current release](https://github.com/Hotgrin/hotgrin/releases/latest)
+and the [changelog](CHANGELOG.md)). The language works end to end and is well
+tested — 90+ tests across eight packages, CI on every commit, and every
+cookbook recipe and example is machine-verified — but it is young. Expect
+rough edges, and please
 [open an issue](https://github.com/Hotgrin/hotgrin/issues) when you find one.
 
-**On the roadmap:** remote
-libraries (`use ... from "github.com/..."`), interactive `ask` prompts, a richer
-standard library, and the optional Assessor / AI-mentor checking layers.
+**On the roadmap:** an interpreter mode (no Go install at all), optional type
+annotations, more message languages, and the Assessor / AI-mentor layers —
+the full list lives in [ROADMAP.md](ROADMAP.md).
+
+## What can you build?
+
+Anything — but start where your problem lives. Each category has verified,
+copy-paste examples:
+
+| Category | Examples |
+|---|---|
+| SEO & websites | [examples/seo](examples/seo/) — page checks, title lengths, robots.txt |
+| APIs & JSON | [examples/api](examples/api/) — query real APIs, uptime checker |
+| Maths & formulas | [examples/math](examples/math/) — percentages, compound interest, stats |
+| Money & investing | [examples/finance](examples/finance/) — savings goals, ROI, a [loan calculator](examples/projects/loan-calculator/) and the [flagship invoice maker](examples/projects/invoice-maker/) |
+| Science & units | [examples/science](examples/science/) — speed, conversions, recipe scaling |
+| Text & files | [examples/text-files](examples/text-files/) — word counts, find/replace, a journal |
+| Web pages | [examples/html](examples/html/) — generate real HTML from data |
+| Email | [examples/email](examples/email/) — SMTP through the escape hatch |
+| Games & learning | [examples/games](examples/games/) — quiz with scores, dice battle |
+
+More categories (AI, WordPress, Shopify, databases, PDFs) land as their
+enablers ship — see the [roadmap](ROADMAP.md).
 
 ## hotgrin + AI assistants
 

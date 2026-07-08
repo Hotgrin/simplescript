@@ -1,0 +1,31 @@
+# Two players roll dice - best of three wins.
+
+use "std/random"
+
+action roll for with player
+    set d to random between with 1, 6
+    say player plus " rolls " plus d
+    give back d
+end action
+
+set you to 0
+set rival to 0
+
+repeat 3 times
+    set yours to roll for with "You"
+    set theirs to roll for with "Rival"
+    if yours is greater than theirs
+        increase you by 1
+    else if theirs is greater than yours
+        increase rival by 1
+    end if
+end repeat
+
+say "Final: you " plus you plus " - " plus rival plus " rival"
+if you is greater than rival
+    say "You win!"
+else if rival is greater than you
+    say "The rival takes it."
+else
+    say "A draw - rematch!"
+end if

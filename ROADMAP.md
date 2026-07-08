@@ -12,6 +12,16 @@ indexing · deeper type inference — all landed in v0.3.0 (see the
 [changelog](CHANGELOG.md)). Still growing continuously: cookbook recipes and
 Watcher rules.
 
+## v0.6 — next up
+
+- **HTTP POST + headers/auth in `std/web`** — unlocks AI, WordPress, Shopify
+  libraries.
+- **Third-party Go modules in `use go`** — unlocks databases, PDFs, richer
+  images.
+- **Text-to-number conversion** (e.g. `as number`) — today `ask` answers and
+  file contents are text-only, which blocks programs like a persistent budget
+  tracker. Discovered building the examples gallery.
+
 ## v0.4 — the ecosystem door ✅ shipped
 
 Remote GitHub libraries (fetched + cached, `@tag` pinning) · the `use go`

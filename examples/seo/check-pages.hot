@@ -1,0 +1,17 @@
+# Check that important pages on a site answer correctly.
+#   hotgrin run check-pages.hot --site "https://your-site.com"
+
+use "std/web"
+
+input site as text default "https://github.com"
+
+set pages to list of "/", "/robots.txt"
+
+repeat for each p in pages
+    try
+        fetch text with site plus p
+        say "OK      " plus site plus p
+    if it fails
+        say "PROBLEM " plus site plus p plus " — " plus the problem
+    end try
+end repeat

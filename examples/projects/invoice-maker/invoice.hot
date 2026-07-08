@@ -1,0 +1,198 @@
+# ============================================================
+#  INVOICE MAKER — a complete, real-world hotgrin program
+# ============================================================
+#
+#  It builds a professional invoice with South African VAT,
+#  shows it on screen, and saves it as BOTH a text file and a
+#  web page (invoice.html) you can open in any browser.
+#
+#  Run it:            hotgrin run invoice.hot
+#  With your details: hotgrin run invoice.hot --company "My Shop" --vat 15
+#  Run its tests:     hotgrin test invoice.hot
+#  See the Go inside: hotgrin reveal invoice.hot
+#
+# ------------------------------------------------------------
+#  SECTION INDEX  (find each section by its [number])
+# ------------------------------------------------------------
+#  [1]  Settings        - things you can change with --flags
+#  [2]  The items       - what is being invoiced (three lists)
+#  [3]  Money actions   - the maths, written once, used often
+#  [4]  Ask the client  - a question answered at the keyboard
+#  [5]  Build the lines - loop through the items
+#  [6]  The totals      - subtotal, VAT, grand total
+#  [7]  Show and save   - print it, write .txt and .html
+#  [8]  The proof       - tests that the maths is right
+# ------------------------------------------------------------
+
+use "std/data"
+use "std/text"
+
+# ============================================================
+# [1] SETTINGS
+# ============================================================
+# 'input' lines become --flags automatically (try --help!).
+# Each has a sensible default, so the program runs as-is.
+
+input company as text default "Hotgrin Trading"
+input vat as decimal default 15
+input invoice number as text default "INV-2026-001"
+
+# ============================================================
+# [2] THE ITEMS
+# ============================================================
+# Three lists that belong together: position 0 in each list is
+# the first item, position 1 the second, and so on. Lists in
+# hotgrin start counting at 0 — computers always do.
+
+set item names to list of "Wireless mouse", "Mechanical keyboard", "USB-C cable"
+set item prices to list of 299.0, 1450.0, 89.5
+set item quantities to list of 2, 1, 3
+
+# ============================================================
+# [3] MONEY ACTIONS
+# ============================================================
+# An 'action' is a recipe: teach the computer once, use it
+# many times. 'give back' hands the answer to whoever asked.
+
+# One line's cost: price times how many.
+action line total with price, quantity
+    give back price times quantity
+end action
+
+# The VAT portion of an amount at a given rate. An action only
+# sees what you HAND it — top-level values like 'vat' are not
+# visible inside actions, so the rate travels in as a parameter.
+# (That is also why --vat 0 works: the flag flows through.)
+action vat portion with amount, rate
+    give back amount times rate divided by 100
+end action
+
+# Money must LOOK like money: two decimals, thanks to
+# 'rounded to'. We give back text here because it will be
+# joined into the invoice.
+action rand with amount
+    give back "R" plus (amount rounded to 2)
+end action
+
+# ============================================================
+# [4] ASK THE CLIENT
+# ============================================================
+# 'ask' pauses the program and waits for a typed answer.
+# Whatever is typed arrives as text in 'client name'.
+
+ask "Who is this invoice for?" into client name
+
+# A small nicety from the standard library: tidy the answer
+# in case someone typed extra spaces.
+set client name to trim spaces with client name
+
+# ============================================================
+# [5] BUILD THE LINES
+# ============================================================
+# We walk the items by position: 0, 1, 2... 'item i of' reads
+# position i from a list. Each loop turn adds one line of text
+# to 'lines' — "\n" means "start a new line".
+
+set lines to ""
+set subtotal to 0.0
+set i to 0
+
+repeat while i is less than count of item names
+    # Pull this row out of the three lists.
+    set name to item i of item names
+    set price to item i of item prices
+    set quantity to item i of item quantities
+
+    # Work out the line's cost and keep the running subtotal.
+    set cost to line total with price, quantity
+    set subtotal to subtotal plus cost
+
+    # Add a readable line, e.g.:  2 x Wireless mouse @ R299 = R598
+    set lines to lines plus "  " plus quantity plus " x " plus name
+    set lines to lines plus " @ " plus (rand with price)
+    set lines to lines plus " = " plus (rand with cost) plus "\n"
+
+    # Move to the next position. Forgetting this line would
+    # loop forever — the classic mistake, now you know it!
+    increase i by 1
+end repeat
+
+# ============================================================
+# [6] THE TOTALS
+# ============================================================
+set vat amount to vat portion with subtotal, vat
+set grand total to subtotal plus vat amount
+
+# ============================================================
+# [7] SHOW AND SAVE
+# ============================================================
+# First the screen. 'upper case' comes from std/text.
+
+say ""
+say upper case with company
+say "Invoice " plus invoice number plus " for " plus client name
+say "------------------------------------------"
+say lines plus "------------------------------------------"
+say "Subtotal:    " plus (rand with subtotal)
+say "VAT (" plus vat plus "%):    " plus (rand with vat amount)
+say "TOTAL:       " plus (rand with grand total)
+
+# Now the files. Writing can fail (a full disk, a locked
+# folder), so hotgrin insists we plan for that with 'try'.
+
+set text copy to company plus "\nInvoice " plus invoice number
+set text copy to text copy plus "\nFor: " plus client name plus "\n\n"
+set text copy to text copy plus lines
+set text copy to text copy plus "\nSubtotal: " plus (rand with subtotal)
+set text copy to text copy plus "\nVAT:      " plus (rand with vat amount)
+set text copy to text copy plus "\nTOTAL:    " plus (rand with grand total) plus "\n"
+
+try
+    write file with "invoice.txt", text copy
+    say ""
+    say "Saved invoice.txt"
+if it fails
+    say "Could not save the text copy: " plus the problem
+end try
+
+# The HTML version — the same information dressed for a
+# browser. Notice it is just text we build up, like above.
+
+set page to "<!DOCTYPE html>\n<html><head><title>" plus invoice number
+set page to page plus "</title></head>\n<body style='font-family:sans-serif'>\n"
+set page to page plus "<h1>" plus company plus "</h1>\n"
+set page to page plus "<p>Invoice <b>" plus invoice number plus "</b> for <b>"
+set page to page plus client name plus "</b></p>\n<pre>" plus lines plus "</pre>\n"
+set page to page plus "<p>Subtotal: " plus (rand with subtotal) plus "<br>"
+set page to page plus "VAT: " plus (rand with vat amount) plus "<br>"
+set page to page plus "<b>TOTAL: " plus (rand with grand total) plus "</b></p>\n"
+set page to page plus "</body></html>\n"
+
+try
+    write file with "invoice.html", page
+    say "Saved invoice.html - open it in your browser!"
+if it fails
+    say "Could not save the web page: " plus the problem
+end try
+
+# ============================================================
+# [8] THE PROOF
+# ============================================================
+# Tests live right next to the code they check, and run with
+# one command: hotgrin test invoice.hot. If someone changes
+# the maths and breaks it, these will say so immediately.
+
+test "a line total multiplies price by quantity"
+    expect line total with 100.0, 3 to be 300
+    expect line total with 89.5, 2 to be 179
+end test
+
+test "the vat portion is right at 15 percent"
+    expect vat portion with 1000.0, 15.0 to be at least 149.9
+    expect vat portion with 1000.0, 15.0 to be at most 150.1
+end test
+
+test "rand formatting shows two decimals"
+    expect rand with 598.0 to be "R598"
+    expect rand with 89.456 to be "R89.46"
+end test

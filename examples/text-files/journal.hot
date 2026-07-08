@@ -1,0 +1,24 @@
+# A tiny journal that remembers between runs.
+#   hotgrin run journal.hot --note "Shipped v0.5!"
+
+use "std/data"
+
+input note as text default "hello journal"
+
+try
+    set old to read file with "journal.txt"
+    try
+        write file with "journal.txt", old plus "\n" plus note
+        say "Added. Your journal so far:"
+        say old plus "\n" plus note
+    if it fails
+        say "Could not save: " plus the problem
+    end try
+if it fails
+    try
+        write file with "journal.txt", note
+        say "Started your journal with: " plus note
+    if it fails
+        say "Could not create the journal: " plus the problem
+    end try
+end try

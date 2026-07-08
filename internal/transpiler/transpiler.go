@@ -1017,7 +1017,8 @@ func inputType(typ string) ssType {
 
 func (t *Transpiler) emitTry(n *ast.TryStmt) string {
 	var b strings.Builder
-	b.WriteString("err := func() error {\n")
+	ev := fmt.Sprintf("tryErr%d", t.uid()) // unique per try: siblings share a scope
+	b.WriteString(ev + " := func() error {\n")
 	savedScope, savedDecl := t.snapshot()
 	for _, s := range n.Body {
 		b.WriteString(t.emitTryStmt(s))
@@ -1025,11 +1026,11 @@ func (t *Transpiler) emitTry(n *ast.TryStmt) string {
 	}
 	t.restore(savedScope, savedDecl)
 	b.WriteString("return nil\n}()\n")
-	b.WriteString("if err != nil {\n")
+	b.WriteString("if " + ev + " != nil {\n")
 	savedScope, savedDecl = t.snapshot()
 	t.scope["theProblem"] = tString
 	t.declared["theProblem"] = true
-	b.WriteString("theProblem := err.Error()\n_ = theProblem\n")
+	b.WriteString("theProblem := " + ev + ".Error()\n_ = theProblem\n")
 	for _, s := range n.Handler {
 		b.WriteString(t.emitStmt(s))
 		b.WriteString("\n")
@@ -1068,14 +1069,18 @@ func (t *Transpiler) emitTryStmt(s ast.Stmt) string {
 				v := sanitize(n.Name)
 				t.scope[v] = sig.ret
 				ev := fmt.Sprintf("err%d", t.uid())
+				guard := ""
+				if !t.scopeReads[v] {
+					guard = "\n_ = " + v // set but never read: keep Go happy
+				}
 				if t.declared[v] {
 					// already declared: plain assignment with a fresh error var
 					return "var " + ev + " error\n" + v + ", " + ev + " = " + t.emitCall(call) +
-						"\nif " + ev + " != nil {\nreturn " + ev + "\n}"
+						"\nif " + ev + " != nil {\nreturn " + ev + "\n}" + guard
 				}
 				t.declared[v] = true
 				return v + ", " + ev + " := " + t.emitCall(call) +
-					"\nif " + ev + " != nil {\nreturn " + ev + "\n}"
+					"\nif " + ev + " != nil {\nreturn " + ev + "\n}" + guard
 			}
 		}
 	case *ast.ExprStmt:
@@ -1520,13 +1525,21 @@ func (t *Transpiler) unitCoerce(x *ast.BinaryExpr) (string, string, bool) {
 				t.errorf(x.Line, "multiplying %s by %s has no meaning here yet", lt.name, rt.name)
 				return le, re, true
 			}
-			// division of same dimension -> plain ratio
 			lu, _ := units.Lookup(lt.name)
 			ru, _ := units.Lookup(rt.name)
 			if lu.Dim != ru.Dim {
-				t.errorf(x.Line, "cannot divide %s by %s — one measures %s, the other %s", lt.name, rt.name, lu.Dim, ru.Dim)
+				// different dimensions: a real rate (speed = m/s). Both sides
+				// convert to their base units; the result is a plain number of
+				// base-per-base (metres per second, grams per litre, ...).
+				if lu.Factor != 1 {
+					le = "(" + le + " * " + fmt.Sprintf("%v", lu.Factor) + ")"
+				}
+				if ru.Factor != 1 {
+					re = "(" + re + " * " + fmt.Sprintf("%v", ru.Factor) + ")"
+				}
 				return le, re, true
 			}
+			// same dimension -> plain ratio
 			if lu.Factor != ru.Factor {
 				re = "(" + re + " * " + fmt.Sprintf("%v", ru.Factor/lu.Factor) + ")"
 			}

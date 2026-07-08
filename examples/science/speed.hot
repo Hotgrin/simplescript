@@ -1,0 +1,15 @@
+# Speed, distance, time — with real units doing the work.
+
+set distance to 5 km
+set race time to 25 min
+
+say "Distance: " plus distance
+say "Time:     " plus race time
+
+# Dividing across dimensions gives the rate in base units: metres per second.
+set speed to distance divided by race time
+say "Speed:    " plus (speed rounded to 2) plus " m/s"
+
+if race time is less than 30 min
+    say "That is a solid parkrun!"
+end if

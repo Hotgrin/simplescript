@@ -167,7 +167,9 @@ if 90 min is greater than 1 h ...
 Known units — mass: `mg g kg t` · length: `mm cm m km` · time:
 `ms s/seconds min/minutes h/hours` · volume: `ml l`. Same-dimension values
 combine and compare (the right side converts into the left side's unit);
-scaling by a plain number is fine (`weight times 2`); mixing dimensions, or
+scaling by a plain number is fine (`weight times 2`); dividing across
+dimensions gives a plain rate in base units (`5 km divided by 25 min` is
+metres-per-second); mixing dimensions in +/-/comparisons, or
 adding a bare number to a measurement, is an error caught before the program
 runs. `x in <unit>` converts explicitly.
 

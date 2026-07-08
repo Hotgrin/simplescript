@@ -1,0 +1,14 @@
+# Read a site's robots.txt — the file that tells search engines what to crawl.
+#   hotgrin run robots.hot --site "https://your-site.com"
+
+use "std/web"
+
+input site as text default "https://github.com"
+
+try
+    set rules to fetch text with site plus "/robots.txt"
+    say "robots.txt for " plus site plus ":"
+    say rules
+if it fails
+    say "No robots.txt found: " plus the problem
+end try

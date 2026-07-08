@@ -1,0 +1,18 @@
+# Ask a real API a question: what is this npm package?
+#   hotgrin run package-info.hot --pkg "react"
+
+use "std/web"
+
+input pkg as text default "left-pad"
+
+try
+    set doc to fetch text with "https://registry.npmjs.org/" plus pkg plus "/latest"
+    set name to json value with doc, "name"
+    set version to json value with doc, "version"
+    set about to json value with doc, "description"
+    say "Package: " plus name
+    say "Version: " plus version
+    say "About:   " plus about
+if it fails
+    say "Could not fetch: " plus the problem
+end try

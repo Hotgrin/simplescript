@@ -1,0 +1,16 @@
+# Return on investment, plain and simple.
+
+action roi percent with cost, gained
+    give back (gained minus cost) divided by cost times 100
+end action
+
+set cost to 25000.0
+set sold for to 31500.0
+
+say "Bought at R" plus cost plus ", sold at R" plus sold for
+say "ROI: " plus (roi percent with cost, sold for rounded to 1) plus "%"
+
+test "roi maths works"
+    expect roi percent with 100.0, 150.0 to be 50
+    expect roi percent with 200.0, 150.0 to be -25
+end test

@@ -186,6 +186,15 @@ func TestUnits(t *testing.T) {
 	wants(t, "set w to 129 kg\nsay \"W: \" plus w", "fmt.Sprintf(\"%v \"+\"kg\", w)")
 }
 
+func TestUnitRateDivision(t *testing.T) {
+	// Different dimensions divide into a plain base-unit rate: 5 km / 25 min
+	// = 5000 m / 1500 s. Same dimension stays a plain ratio.
+	wants(t, "set d to 5 km\nset p to 25 min\nsay d divided by p",
+		"(d * 1000)", "(p * 60)")
+	wants(t, "set a to 2 km\nset b to 500 m\nsay a divided by b",
+		"(b * 0.001)")
+}
+
 func TestUnitDimensionErrors(t *testing.T) {
 	toks := lexer.New("set w to 1 kg\nset h to 1 m\nsay w plus h").Tokenize()
 	prog, _ := parser.New(toks).Parse()
@@ -235,12 +244,25 @@ func TestRepeatedFallibleSetSameVar(t *testing.T) {
 	if len(regexp.MustCompile(`saved, err\d+ :=`).FindAllString(out2, -1)) != 2 {
 		t.Errorf("sibling closures must each declare independently:\n%s", out2)
 	}
+	// Two SEQUENTIAL tries in one scope must use distinct error names.
+	src4 := fall + "try\nset a to risky with 1\nsay a\nif it fails\nsay the problem\nend try\n" +
+		"try\nset b to risky with 2\nsay b\nif it fails\nsay the problem\nend try"
+	out4 := gen(t, src4)
+	if len(regexp.MustCompile(`tryErr\d+ := func`).FindAllString(out4, -1)) != 2 ||
+		strings.Count(out4, "tryErr0 :=") > 1 {
+		t.Errorf("sequential tries must not share an error name:\n%s", out4)
+	}
+	// An unused fallible-set variable still needs its _ = guard.
+	src3 := fall + "try\nset ignored to risky with 1\nif it fails\nsay the problem\nend try"
+	if out3 := gen(t, src3); !strings.Contains(out3, "_ = ignored") {
+		t.Errorf("unused fallible set missing guard:\n%s", out3)
+	}
 }
 
 func TestGoFallibleBridge(t *testing.T) {
 	src := "use go\nimport \"os\"\nfunc readFile(p string) (string, error) { b, e := os.ReadFile(p); return string(b), e }\nend go\n" +
 		"try\nset c to read file with \"x.txt\"\nsay c\nif it fails\nsay the problem\nend try"
-	wants(t, src, "c, err0 := readFile(\"x.txt\")", "if err0 != nil")
+	wants(t, src, "c, err", ":= readFile(\"x.txt\")")
 }
 
 func TestAskStopRounded(t *testing.T) {
@@ -278,9 +300,9 @@ func TestErrorHandling(t *testing.T) {
 		"errors.New(\"no zero\")",        // problem path
 		"return x, nil",                  // value path returns nil error
 		"\"errors\"",                     // import
-		"r, err0 := risky(5)",            // checked call inside try
-		"if err0 != nil",
-		"theProblem := err.Error()",
+		"r, err",                         // checked call inside try
+		":= risky(5)",
+		".Error()",
 	)
 }
 

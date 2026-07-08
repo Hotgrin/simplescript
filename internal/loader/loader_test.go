@@ -80,6 +80,11 @@ func TestStdLibraryEmbedded(t *testing.T) {
 	if !found {
 		t.Error("std/text's go block was not merged")
 	}
+	// the fallible text-between helper must be present
+	data, err := stdFS.ReadFile("std/text.hot")
+	if err != nil || !strings.Contains(string(data), "func textBetween(s string, start string, finish string) (string, error)") {
+		t.Error("std/text is missing the fallible textBetween action")
+	}
 	// unknown std name is a friendly error
 	write(t, dir, "bad.hot", "use \"std/nope\"\nsay 1")
 	if _, errs := LoadFile(filepath.Join(dir, "bad.hot")); len(errs) == 0 {

@@ -255,10 +255,12 @@ func (w *Watcher) checkBlock(stmts []ast.Stmt, names map[string]bool, inTry bool
 		switch n := s.(type) {
 		case *ast.SayStmt:
 			w.checkVoidUse(n.Value)
+			w.checkNestedFallible(n.Value, true)
 			w.checkExpr(n.Value, names)
 		case *ast.SetStmt:
 			w.checkFallibleUse(n.Value, inTry)
 			w.checkVoidUse(n.Value)
+			w.checkNestedFallible(n.Value, true)
 			w.checkExpr(n.Value, names)
 		case *ast.IncreaseStmt:
 			w.checkExpr(n.Target, names)
@@ -311,6 +313,37 @@ func (w *Watcher) checkBlock(stmts []ast.Stmt, names map[string]bool, inTry bool
 			if n.Expected != nil {
 				w.checkExpr(n.Expected, names)
 			}
+		}
+	}
+}
+
+// checkNestedFallible flags a fallible call buried inside a larger expression
+// (say "x" plus risky with 1) — the error would have nowhere to go. The fix is
+// always the same: set it into a name first.
+func (w *Watcher) checkNestedFallible(e ast.Expr, topLevel bool) {
+	switch x := e.(type) {
+	case *ast.CallExpr:
+		if w.fallible[x.Name] && !topLevel {
+			w.add(Error, x.Line,
+				fmt.Sprintf("'%s' can fail, so it can't sit inside a bigger calculation — first 'set answer to %s ...', then use answer", x.Name, x.Name),
+				fmt.Sprintf("'%s' kan misluk, dus kan dit nie binne 'n groter berekening sit nie — 'set antwoord to %s ...' eers, gebruik dan antwoord", x.Name, x.Name))
+		}
+		for _, a := range x.Args {
+			w.checkNestedFallible(a, false)
+		}
+	case *ast.BinaryExpr:
+		w.checkNestedFallible(x.Left, false)
+		w.checkNestedFallible(x.Right, false)
+	case *ast.ConvExpr:
+		w.checkNestedFallible(x.X, false)
+	case *ast.FieldExpr:
+		w.checkNestedFallible(x.Target, false)
+	case *ast.IndexExpr:
+		w.checkNestedFallible(x.Index, false)
+		w.checkNestedFallible(x.Target, false)
+	case *ast.ListLit:
+		for _, el := range x.Elements {
+			w.checkNestedFallible(el, false)
 		}
 	}
 }
