@@ -1,0 +1,42 @@
+# ============================================
+#  27 — MINI PROJECT: THE WORD GAME
+# ============================================
+# A playable game: the computer picks a secret
+# word, you get hints and three guesses.
+# Combines random, lists, ask, loops, choices.
+
+use "std/random"
+use "std/text"
+
+set words to list of "protea", "biltong", "springbok", "rooibos"
+
+# Pick the secret: a random position in the list.
+set secret to item (random below with count of words) of words
+
+say "I picked a secret South African word."
+say "Hint 1: it has " plus (text length with secret) plus " letters."
+
+set guesses left to 3
+set solved to false
+
+repeat while guesses left is greater than 0 and solved is false
+    ask "Your guess?" into attempt
+    set attempt to lower case with trim spaces with attempt
+
+    if attempt is secret
+        set solved to true
+    else
+        decrease guesses left by 1
+        if guesses left is 2
+            say "Hint 2: it starts the same as '" plus secret plus "' does... just kidding. Try again!"
+        else if guesses left is 1
+            say "Last chance! Hint 3: it is delicious or beautiful."
+        end if
+    end if
+end repeat
+
+if solved
+    say "YES! It was " plus secret plus ". You win!"
+else
+    say "Out of guesses - it was " plus secret plus ". Rematch?"
+end if

@@ -1,0 +1,21 @@
+# ============================================
+#  05 — REPEATING (loops)
+# ============================================
+
+# The simplest loop: do something N times.
+repeat 3 times
+    say "hip hip hooray!"
+end repeat
+
+# 'repeat while' keeps going as long as a
+# condition stays true. This counts down:
+set n to 5
+repeat while n is greater than 0
+    say n
+    decrease n by 1
+end repeat
+say "Liftoff!"
+
+# The golden rule of while-loops: something
+# inside must change (here, 'decrease n'),
+# otherwise the loop never ends!

@@ -2,6 +2,6 @@
 
 use go
 import "math/rand"
-func randomUpTo(n int) int { return rand.Intn(n) }
+func randomBelow(n int) int { return rand.Intn(n) }
 func randomBetween(low int, high int) int { return low + rand.Intn(high-low+1) }
 end go

@@ -3,6 +3,24 @@
 All notable changes to hotgrin are recorded here. This project follows
 [Semantic Versioning](https://semver.org/) loosely while it is pre-1.0.
 
+## [0.5.4] - 2026-07-08
+
+### Added
+- **The learn path**: `examples/learn/` — 27 numbered, heavily-commented
+  lesson programs from first `say` to two mini-projects, every one
+  machine-verified, with an indexed README.
+- **Record field writes** — `set price of order to 249` now works (it had
+  been documented since v0.1 but never implemented). Checked by the Watcher
+  (unknown fields flagged; fallible values must be named first).
+
+### Changed (breaking, alpha)
+- std/text: `starts with` / `ends with` are now **`has prefix` /
+  `has suffix`** — the old spoken names contained the reserved word `with`
+  and were uncallable.
+- std/random: `random up to` is now **`random below`** — `to` is reserved.
+- Library guide now warns Go-bridge authors to pick names whose spoken form
+  avoids connector words.
+
 ## [0.5.3] - 2026-07-08
 
 ### Added

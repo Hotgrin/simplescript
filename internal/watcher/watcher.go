@@ -262,6 +262,14 @@ func (w *Watcher) checkBlock(stmts []ast.Stmt, names map[string]bool, inTry bool
 			w.checkVoidUse(n.Value)
 			w.checkNestedFallible(n.Value, true)
 			w.checkExpr(n.Value, names)
+		case *ast.SetFieldStmt:
+			// checking the read-form of the field reuses the unknown-field rule
+			w.checkExpr(&ast.FieldExpr{Member: n.Member, Target: n.Target}, names)
+			w.checkFallibleUse(n.Value, inTry)
+			w.checkVoidUse(n.Value)
+			// a fallible result can't land in a field directly: name it first
+			w.checkNestedFallible(n.Value, false)
+			w.checkExpr(n.Value, names)
 		case *ast.IncreaseStmt:
 			w.checkExpr(n.Target, names)
 			w.checkExpr(n.Amount, names)

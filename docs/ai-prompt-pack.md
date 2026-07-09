@@ -144,10 +144,10 @@ the rate in base units (`5 km divided by 25 min` = metres per second).
 
 - `use "std/text"` → `upper case with s` · `lower case with s` ·
   `trim spaces with s` · `replace all with s, old, new` · `text length with s`
-  · `starts with with s, prefix` · `ends with with s, suffix`
+  · `has prefix with s, prefix` · `has suffix with s, suffix`
 - `use "std/data"` → `read file with path` · `write file with path, content`
   — **both FALLIBLE: must be called inside try**
-- `use "std/random"` → `random up to with n` (0..n-1) ·
+- `use "std/random"` → `random below with n` (0..n-1) ·
   `random between with low, high` (inclusive)
 - `use "std/web"` → `fetch text with url` (HTTP GET) ·
   `json value with doc, "dotted.path"` (extract a JSON field as text)
@@ -183,8 +183,9 @@ the rate in base units (`5 km divided by 25 min` = metres per second).
     only its parameters and its own locals — pass in everything it needs.
 13. **Reserved words can never appear inside names.** Common traps: `of`,
     `in`, `to`, `with`, `is`, `from`, `start`, `times`, `item`, `count`,
-    `by`, `into`, `as`. So
-    `percent of` and a parameter called `start` are both invalid names.
+    `by`, `into`, `as`, `repeat`. So
+    `percent of`, an action called `starts with`, and a parameter called
+    `start` are all invalid names.
 
 ## Verified example (uses much of the language)
 

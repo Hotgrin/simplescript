@@ -1,0 +1,23 @@
+# ============================================
+#  02 — REMEMBERING THINGS (variables)
+# ============================================
+# 'set <name> to <value>' stores a value under
+# a name so you can use it later.
+
+set greeting to "Goeie môre"
+set place to "Johannesburg"
+
+# Names may contain SPACES — this is one name:
+set favourite number to 7
+
+# 'plus' joins text together...
+say greeting plus ", " plus place plus "!"
+
+# ...and it happily mixes text with numbers,
+# converting for you:
+say "Favourite number: " plus favourite number
+
+# You can change what a name holds — the
+# newest value wins:
+set greeting to "Goeie nag"
+say greeting plus ", " plus place plus "!"

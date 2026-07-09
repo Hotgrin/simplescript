@@ -1,0 +1,17 @@
+# ============================================
+#  01 — SAY HELLO
+# ============================================
+# Welcome to hotgrin! This file is a program.
+# Lines starting with # are comments — notes
+# for humans that the computer skips.
+#
+# Run me:   hotgrin run 01-say-hello.hot
+
+# 'say' shows something on the screen.
+# Anything between quotes is text.
+say "Hello, world!"
+
+# You can say as many things as you like,
+# each on its own line.
+say "My name is hotgrin."
+say "I read almost like English."

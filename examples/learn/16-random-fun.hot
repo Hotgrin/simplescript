@@ -1,0 +1,27 @@
+# ============================================
+#  16 — RANDOM FUN (std/random)
+# ============================================
+
+use "std/random"
+
+# 'random between' picks a whole number,
+# both ends included - a die:
+say "You rolled: " plus (random between with 1, 6)
+
+# 'random below' picks from 0 up to n-1:
+say "Random index: " plus (random below with 5)
+
+# Random + a list = surprise picks:
+set snacks to list of "biltong", "koeksister", "droëwors", "melktert"
+set pick to random below with count of snacks
+say "Snack of the day: " plus item pick of snacks
+
+# Roll a die many times and keep the best:
+set best to 0
+repeat 5 times
+    set d to random between with 1, 6
+    if d is greater than best
+        set best to d
+    end if
+end repeat
+say "Best of five rolls: " plus best

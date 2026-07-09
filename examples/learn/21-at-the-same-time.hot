@@ -1,0 +1,26 @@
+# ============================================
+#  21 — DOING THINGS AT ONCE (concurrency)
+# ============================================
+# 'at the same time' runs several calls in
+# parallel and waits for all of them. hotgrin
+# guards the shared list for you — this is
+# safe by design.
+
+action slow square with n
+    give back n times n
+end action
+
+set answers to list of nothing
+
+at the same time
+    do slow square with 3 into answers
+    do slow square with 4 into answers
+    do slow square with 5 into answers
+end at the same time
+
+# All three finished. Order is NOT guaranteed
+# (they truly ran at once), but all arrive:
+say count of answers plus " answers collected"
+repeat for each a in answers
+    say a
+end repeat

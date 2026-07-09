@@ -58,6 +58,9 @@ say shout case with "howzit"
 Rules of the hatch (v0.4):
 
 - **camelCase becomes spoken form:** `shoutCase` is callable as `shout case`.
+  Mind reserved words: a Go name like `startsWith` reads as `starts with`,
+  and `with` is reserved — making it uncallable. Pick names whose spoken
+  form avoids connector words (`hasPrefix` → `has prefix`).
 - **Imports:** one per line, `import "pkg"` form; hotgrin merges and
   de-duplicates them with its own.
 - **Failure-capable functions:** return `(T, error)` and hotgrin treats the
@@ -76,7 +79,7 @@ Shipped inside hotgrin itself (no download):
 - `use "std/text"` — `upper case`, `lower case`, `trim spaces`, `replace all`,
   `text length`, `starts with`, `ends with`
 - `use "std/data"` — `read file`, `write file` (fallible — use `try`)
-- `use "std/random"` — `random up to`, `random between`
+- `use "std/random"` — `random below`, `random between`
 - `use "std/web"` — `fetch text`, `json value` (fallible)
 
 They're written in hotgrin using `use go` — read them in

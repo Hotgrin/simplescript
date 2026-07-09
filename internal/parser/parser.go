@@ -180,6 +180,13 @@ func (p *Parser) parseSay() ast.Stmt {
 func (p *Parser) parseSet() ast.Stmt {
 	p.expect(lexer.SET)
 	name := p.expect(lexer.IDENT).Literal
+	// "set <field> of <record> to <value>" writes a record field.
+	if p.is(lexer.OF) {
+		p.advance()
+		target := p.parseExpr(0) // stops at TO (not an operator)
+		p.expect(lexer.TO)
+		return &ast.SetFieldStmt{Member: name, Target: target, Value: p.parseExpr(0)}
+	}
 	p.expect(lexer.TO)
 	return &ast.SetStmt{Name: name, Value: p.parseExpr(0)}
 }

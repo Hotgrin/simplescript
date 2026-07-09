@@ -1,0 +1,25 @@
+# ============================================
+#  08 — YOUR OWN ACTIONS
+# ============================================
+# An 'action' is a recipe you teach the
+# computer once and use many times.
+# 'with' lists the ingredients it needs;
+# 'give back' hands over the result.
+
+action double with n
+    give back n times 2
+end action
+
+action greet with who
+    give back "Hello, " plus who plus "!"
+end action
+
+# Use them by name:
+say double with 21
+say greet with "Adriaan"
+
+# One important rule, worth learning early:
+# an action only sees what you HAND it.
+# Values set at the top of the program are
+# not visible inside actions — everything
+# travels in through the parameters.

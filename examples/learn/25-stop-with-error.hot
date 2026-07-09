@@ -1,0 +1,20 @@
+# ============================================
+#  25 — STOP WITH ERROR (guard clauses)
+# ============================================
+# Sometimes the right move is refusing to
+# continue. 'stop with error' prints the
+# message and ends the program with a failure
+# code other programs can see.
+#
+# Try:  hotgrin run 25-stop-with-error.hot --amount -5
+
+input amount as decimal default 100
+
+if amount is less than 0
+    stop with error "the amount cannot be negative"
+end if
+
+# Everything below only runs for valid input -
+# the guard above already turned bad cases away.
+say "Processing R" plus amount
+say "Done."

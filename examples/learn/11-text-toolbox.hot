@@ -1,0 +1,35 @@
+# ============================================
+#  11 — THE TEXT TOOLBOX (std/text)
+# ============================================
+# 'use' borrows a library. std/text ships
+# inside hotgrin — no downloads.
+
+use "std/text"
+
+set shout to upper case with "howzit"
+set whisper to lower case with "HOWZIT"
+say shout plus " ... " plus whisper
+
+set messy to "   too many spaces   "
+say "[" plus (trim spaces with messy) plus "]"
+
+say replace all with "I like tea", "tea", "coffee"
+say "letters in 'hotgrin': " plus (text length with "hotgrin")
+
+if has prefix with "hotgrin", "hot"
+    say "It does start with 'hot'!"
+end if
+if has suffix with "hotgrin", "grin"
+    say "...and ends with a grin."
+end if
+
+# 'text between' pulls text out from between
+# two markers. It CAN fail (the markers might
+# not be there), so it lives inside 'try' —
+# more about try in lesson 14!
+try
+    set found to text between with "<b>bold bit</b>", "<b>", "</b>"
+    say "Between the tags: " plus found
+if it fails
+    say "Could not find it: " plus the problem
+end try

@@ -125,6 +125,19 @@ func TestInputsAreKnownNames(t *testing.T) {
 	}
 }
 
+func TestSetFieldChecked(t *testing.T) {
+	src := "describe order\nprice is 100\nend describe\nset colour of order to \"red\""
+	if !hasFinding(check(t, src), Error, "colour") {
+		t.Errorf("unknown field in field-write not flagged")
+	}
+	ok := "describe order\nprice is 100\nend describe\nset price of order to 249\nsay price of order"
+	for _, f := range check(t, ok) {
+		if f.Severity == Error {
+			t.Errorf("false positive on valid field write: %v", f)
+		}
+	}
+}
+
 func TestNestedFallibleCall(t *testing.T) {
 	fall := "action risky with p\nif p is 0\ngive back problem \"no\"\nend if\ngive back p\nend action\n"
 	src := fall + "try\nsay \"x: \" plus risky with 1\nif it fails\nsay the problem\nend try"

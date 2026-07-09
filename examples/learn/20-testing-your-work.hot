@@ -1,0 +1,30 @@
+# ============================================
+#  20 — TESTING YOUR WORK
+# ============================================
+# Tests are little promises the machine checks.
+# Run them:  hotgrin test 20-testing-your-work.hot
+# (Running the file normally ignores them.)
+
+action shout with word
+    give back word plus "!"
+end action
+
+action average with a, b
+    give back (a plus b) divided by 2
+end action
+
+say shout with "tests matter"
+
+test "shout adds excitement"
+    expect shout with "go" to be "go!"
+end test
+
+test "average sits between its inputs"
+    expect average with 10, 20 to be 15
+    expect average with 10, 20 to be at least 10
+    expect average with 10, 20 to be at most 20
+end test
+
+# Break 'average' on purpose (change plus to
+# minus), run the tests, watch them catch it,
+# fix it back. That is the whole habit.

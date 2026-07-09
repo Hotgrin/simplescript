@@ -1,5 +1,8 @@
 # hotgrin examples, by category
 
+**New to programming? Start with [learn/](learn/)** — a numbered path of 27
+small, heavily-commented lessons, from `say "hello"` to complete mini-projects.
+
 Every program here is machine-verified: it runs exactly as written. Categories
 match the "What can you build?" grid on [hotgrin.com](https://hotgrin.com).
 

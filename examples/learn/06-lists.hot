@@ -1,0 +1,24 @@
+# ============================================
+#  06 — LISTS
+# ============================================
+# A list holds several values, in order.
+
+set colours to list of "red", "green", "blue"
+
+# 'count of' tells you how many:
+say count of colours plus " colours"
+
+# Positions start at 0 — the first item is
+# 0 steps from the start. Every programming
+# language counts this way.
+say "First:  " plus item 0 of colours
+say "Second: " plus item 1 of colours
+
+# 'put ... into' adds to the end:
+put "protea crimson" into colours
+say "Now " plus count of colours plus " colours"
+
+# 'contains' asks if something is in there:
+if colours contains "green"
+    say "Green is available."
+end if

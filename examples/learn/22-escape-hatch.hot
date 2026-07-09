@@ -1,0 +1,30 @@
+# ============================================
+#  22 — THE ESCAPE HATCH (use go)
+# ============================================
+# When hotgrin doesn't have something, borrow
+# it from Go. Everything between 'use go' and
+# 'end go' is real Go code; each function you
+# declare becomes a hotgrin action.
+
+use go
+import "strings"
+func mirror(s string) string {
+	r := []rune(s)
+	for i, j := 0, len(r)-1; i < j; i, j = i+1, j-1 {
+		r[i], r[j] = r[j], r[i]
+	}
+	return string(r)
+}
+func echoText(s string, n int) string { return strings.Repeat(s, n) }
+end go
+
+# camelCase Go names are called as spaced words:
+say mirror with "hotgrin"
+say echo text with "ha", 3
+
+# Naming tip for the Go side: the spoken form
+# must avoid reserved words. 'startsWith' reads
+# as 'starts with' ('with' is reserved), and
+# 'repeatText' reads as 'repeat text' ('repeat'
+# starts loops!). Pick names like 'hasPrefix'
+# and 'echoText'.

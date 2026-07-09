@@ -226,6 +226,12 @@ rough edges, and please
 annotations, more message languages, and the Assessor / AI-mentor layers —
 the full list lives in [ROADMAP.md](ROADMAP.md).
 
+## Learn it in 27 small steps
+
+[`examples/learn/`](examples/learn/) is a numbered lesson path — every file a
+tiny, runnable, heavily-commented program, from your first `say "hello"` to a
+playable word game. Read, run, change, break, fix: that cycle is the course.
+
 ## What can you build?
 
 Anything — but start where your problem lives. Each category has verified,

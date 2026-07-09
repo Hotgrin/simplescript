@@ -1,0 +1,21 @@
+# ============================================
+#  24 — VARIABLE INDEXES (parallel lists)
+# ============================================
+# 'item i of' works with a VARIABLE position -
+# the key to walking lists that belong together.
+
+set names to list of "Thandi", "Pieter", "Sipho"
+set marks to list of 82, 47, 91
+
+set i to 0
+repeat while i is less than count of names
+    set who to item i of names
+    set mark to item i of marks
+    say who plus ": " plus mark
+    increase i by 1
+end repeat
+
+# The three golden rules of this pattern:
+#  1. positions start at 0
+#  2. the lists must stay the same length
+#  3. never forget 'increase i by 1'

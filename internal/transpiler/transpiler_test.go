@@ -177,6 +177,11 @@ func TestSayFallibleInsideTry(t *testing.T) {
 	}
 }
 
+func TestSetField(t *testing.T) {
+	src := "describe order\nprice is 100\nend describe\nset price of order to 249\nsay price of order"
+	wants(t, src, "order.Price = 249")
+}
+
 func TestUnits(t *testing.T) {
 	wants(t, "set w to 129 kg\nsay w", "w := 129.0", "fmt.Println(w, \"kg\")")
 	wants(t, "set w to 129 kg\nsay w in g", "(w * 1000)", "\"g\")")

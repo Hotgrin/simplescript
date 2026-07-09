@@ -1,0 +1,61 @@
+# ============================================
+#  26 — MINI PROJECT: MARKS REPORT
+# ============================================
+# Everything so far, working together: lists,
+# variable indexes, actions, records, choices,
+# formatting - and tests proving the maths.
+#   hotgrin run  26-project-marks-report.hot
+#   hotgrin test 26-project-marks-report.hot
+
+set names to list of "Thandi", "Pieter", "Sipho", "Anele"
+set marks to list of 82, 47, 91, 66
+
+action grade word with mark
+    if mark is at least 80
+        give back "distinction"
+    else if mark is at least 50
+        give back "pass"
+    end if
+    give back "retry"
+end action
+
+action class average with total, learners
+    give back total divided by learners
+end action
+
+describe summary
+    total is 0
+    best mark is 0
+    best name is "nobody"
+end describe
+
+set i to 0
+say "=== CLASS REPORT ==="
+repeat while i is less than count of names
+    set who to item i of names
+    set mark to item i of marks
+
+    say who plus ": " plus mark plus "  (" plus (grade word with mark) plus ")"
+
+    increase total of summary by mark
+    if mark is greater than best mark of summary
+        set best mark of summary to mark
+        set best name of summary to who
+    end if
+    increase i by 1
+end repeat
+
+say "--------------------"
+set avg to class average with total of summary, count of names
+say "Average: " plus (avg rounded to 1)
+say "Top of class: " plus best name of summary plus " with " plus best mark of summary
+
+test "grading bands are right"
+    expect grade word with 80 to be "distinction"
+    expect grade word with 50 to be "pass"
+    expect grade word with 49 to be "retry"
+end test
+
+test "average maths holds"
+    expect class average with 200, 4 to be 50
+end test

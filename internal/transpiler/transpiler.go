@@ -373,6 +373,9 @@ func (t *Transpiler) refineBody(stmts []ast.Stmt) {
 		case *ast.SetStmt:
 			t.refineExpr(n.Value)
 			t.scope[sanitize(n.Name)] = t.typeOf(n.Value)
+		case *ast.SetFieldStmt:
+			t.refineExpr(n.Target)
+			t.refineExpr(n.Value)
 		case *ast.SayStmt:
 			t.refineExpr(n.Value)
 		case *ast.IncreaseStmt:
@@ -904,6 +907,9 @@ func (t *Transpiler) collectReads(stmts []ast.Stmt) map[string]bool {
 				ex(n.Value)
 			case *ast.SetStmt:
 				ex(n.Value)
+			case *ast.SetFieldStmt:
+				ex(n.Target)
+				ex(n.Value)
 			case *ast.IncreaseStmt:
 				ex(n.Target)
 				ex(n.Amount)
@@ -1157,6 +1163,11 @@ func (t *Transpiler) emitStmt(s ast.Stmt) string {
 	case *ast.PutStmt:
 		list := t.emitExpr(n.List)
 		return list + " = append(" + list + ", " + t.emitExpr(n.Value) + ")"
+
+	case *ast.SetFieldStmt:
+		// Emit through FieldExpr so member casing/pathing stays identical.
+		lhs := t.emitExpr(&ast.FieldExpr{Member: n.Member, Target: n.Target})
+		return lhs + " = " + t.emitExpr(n.Value)
 
 	case *ast.AskStmt:
 		t.needAsk = true

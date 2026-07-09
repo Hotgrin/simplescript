@@ -1,0 +1,24 @@
+# ============================================
+#  13 — PROGRAM INPUTS (--flags)
+# ============================================
+# 'input' lines create settings you change
+# from the command line, each with a default:
+#
+#   hotgrin run 13-program-inputs.hot
+#   hotgrin run 13-program-inputs.hot --learner Sipho --mark 91
+#   hotgrin run 13-program-inputs.hot --help     <- free help screen!
+#
+# Types: text, whole (whole number),
+# decimal, truth (true/false).
+
+input learner as text default "Thandi"
+input mark as whole default 82
+input bonus as decimal default 2.5
+input loud as truth default false
+
+set final mark to mark plus bonus
+
+if loud
+    say "ATTENTION EVERYONE!"
+end if
+say learner plus " finishes on " plus final mark

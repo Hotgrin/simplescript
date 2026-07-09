@@ -40,6 +40,17 @@ func TestParseUse(t *testing.T) {
 	}
 }
 
+func TestParseSetField(t *testing.T) {
+	got := parse(t, "set price of order to 249")
+	if !strings.Contains(got, "(set-field price of (id order) (num 249))") {
+		t.Errorf("field write not parsed: %s", got)
+	}
+	// plain set still plain
+	if got := parse(t, "set price to 249"); !strings.Contains(got, `(set "price" (num 249))`) {
+		t.Errorf("plain set broken: %s", got)
+	}
+}
+
 func TestParseUnits(t *testing.T) {
 	if got := parse(t, "set w to 129 kg"); !strings.Contains(got, "(unit 129 kg)") {
 		t.Errorf("unit literal not parsed: %s", got)

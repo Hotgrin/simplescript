@@ -1,0 +1,23 @@
+# ============================================
+#  10 — RECORDS (describing a thing)
+# ============================================
+# A record groups facts about one thing.
+# 'describe' names the thing; inside, each
+# line is 'field is value'.
+
+describe learner
+    name is "Thandi"
+    mark is 82
+    grade is "not decided yet"
+end describe
+
+# Read a field with 'of':
+say name of learner plus " scored " plus mark of learner
+
+# Change a field:
+set grade of learner to "distinction"
+say name of learner plus " earned a " plus grade of learner
+
+# Fields holding numbers can grow:
+increase mark of learner by 3
+say "After the remark: " plus mark of learner

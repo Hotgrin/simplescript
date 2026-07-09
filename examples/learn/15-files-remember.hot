@@ -1,0 +1,25 @@
+# ============================================
+#  15 — FILES REMEMBER (std/data)
+# ============================================
+# Variables forget when the program ends.
+# Files remember. Run me TWICE and watch!
+
+use "std/data"
+
+try
+    # Second run onwards: the file exists.
+    set memory to read file with "visits.txt"
+    say "Welcome back! I remembered: " plus memory
+if it fails
+    # First run: no file yet - make one.
+    say "First visit! Writing myself a note..."
+    try
+        write file with "visits.txt", "you were here before"
+        say "Saved. Run me again!"
+    if it fails
+        say "Could not save: " plus the problem
+    end try
+end try
+
+# "\n" inside text means "start a new line" -
+# handy when writing multi-line files.

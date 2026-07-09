@@ -1,0 +1,35 @@
+# ============================================
+#  14 — WHEN THINGS FAIL (try)
+# ============================================
+# Real programs face problems. hotgrin makes
+# failure honest: an action that CAN fail says
+# so with 'give back problem', and whoever
+# calls it MUST be ready with 'try'.
+
+action safe divide with a, b
+    if b is 0
+        give back problem "cannot divide by zero"
+    end if
+    give back a divided by b
+end action
+
+try
+    # A call that can fail must be the WHOLE value
+    # of a 'set' — name the answer first, then use it.
+    set fine to safe divide with 10, 2
+    say "10 / 2 = " plus fine
+
+    set broken to safe divide with 10, 0
+    say "10 / 0 = " plus broken
+    say "this line never runs - the failure jumps below"
+if it fails
+    # 'the problem' holds the reason, in plain words.
+    say "Caught: " plus the problem
+end try
+
+say "...and the program carries on afterwards."
+
+# Try deleting the try-block and calling
+# 'safe divide' bare: the Watcher will stop
+# you BEFORE running. A failure can never
+# slip past silently — that's the promise.

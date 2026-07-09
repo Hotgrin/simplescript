@@ -1,0 +1,28 @@
+# ============================================
+#  19 — UNIT MATHS
+# ============================================
+# Measurements do arithmetic — and hotgrin
+# keeps the physics honest.
+
+# Same kind of unit? They combine freely —
+# the answer comes out in the LEFT unit:
+set walk to 2 km plus 500 m
+say walk                       # 2.5 km
+
+# Scaling by a plain number is fine:
+set double walk to walk times 2
+say double walk                # 5 km
+
+# Comparisons convert automatically too:
+if 90 min is greater than 1 h
+    say "90 minutes beats an hour."
+end if
+
+# Dividing DIFFERENT kinds gives a rate, in
+# base units (metres per second here):
+set pace to walk divided by 30 min
+say "Speed: " plus (pace rounded to 2) plus " m/s"
+
+# And nonsense is caught kindly BEFORE running.
+# Try adding this line and run again:
+#   say 1 kg plus 1 km

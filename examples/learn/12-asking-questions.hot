@@ -1,0 +1,16 @@
+# ============================================
+#  12 — ASKING QUESTIONS (ask)
+# ============================================
+# 'ask' prints a question, waits for typing,
+# and stores the answer.
+
+ask "What is your name?" into visitor
+ask "And your favourite colour?" into colour
+
+say "Welcome, " plus visitor plus "!"
+say colour plus " is a fine choice."
+
+# One honest rule: whatever is typed arrives
+# as TEXT — even if someone types 42, it is
+# the text "42", not the number. For numbers,
+# use 'input' flags — that's lesson 13.

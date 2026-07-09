@@ -1,0 +1,20 @@
+# ============================================
+#  09 — ACTIONS CALLING ACTIONS
+# ============================================
+# Actions can use other actions — small
+# recipes combining into bigger ones.
+
+action vat portion with amount, rate
+    give back amount times rate divided by 100
+end action
+
+action price including vat with amount, rate
+    # This action USES the one above:
+    set tax to vat portion with amount, rate
+    give back amount plus tax
+end action
+
+say "R500 + 15% VAT = R" plus (price including vat with 500.0, 15.0)
+
+# hotgrin figures out all the types by itself —
+# you never write 'int' or 'float' anywhere.

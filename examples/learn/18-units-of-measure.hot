@@ -1,0 +1,25 @@
+# ============================================
+#  18 — UNITS OF MEASURE
+# ============================================
+# hotgrin understands measurements: write the
+# unit right after the number.
+
+set weight to 129 kg
+set height to 1.82 m
+set walk to 45 min
+
+# Measurements introduce themselves when said:
+say weight        # 129 kg
+say height        # 1.82 m
+
+# 'in' converts between units of the same kind:
+say weight in g   # 129000 g
+say walk in h     # 0.75 h
+
+# They join text naturally:
+say "You walked for " plus walk
+
+# Known units - mass: mg g kg t
+#                length: mm cm m km
+#                time: ms s min h (and words like minutes)
+#                volume: ml l

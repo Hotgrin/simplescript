@@ -1,0 +1,21 @@
+# ============================================
+#  17 — THE WEB (std/web)
+# ============================================
+# Fetch real data from the internet. Network
+# calls can fail (no wifi, server down), so
+# they live inside 'try'.
+
+use "std/web"
+
+try
+    # Ask npm's registry about a package:
+    set doc to fetch text with "https://registry.npmjs.org/left-pad/1.3.0"
+
+    # The answer is JSON - pull fields out by
+    # name with 'json value':
+    set title to json value with doc, "name"
+    set blurb to json value with doc, "description"
+    say title plus ": " plus blurb
+if it fails
+    say "Could not reach the internet: " plus the problem
+end try

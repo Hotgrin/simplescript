@@ -9,8 +9,8 @@ func lowerCase(s string) string { return strings.ToLower(s) }
 func trimSpaces(s string) string { return strings.TrimSpace(s) }
 func replaceAll(s string, old string, new string) string { return strings.ReplaceAll(s, old, new) }
 func textLength(s string) int { return len([]rune(s)) }
-func startsWith(s string, prefix string) bool { return strings.HasPrefix(s, prefix) }
-func endsWith(s string, suffix string) bool { return strings.HasSuffix(s, suffix) }
+func hasPrefix(s string, prefix string) bool { return strings.HasPrefix(s, prefix) }
+func hasSuffix(s string, suffix string) bool { return strings.HasSuffix(s, suffix) }
 func textBetween(s string, start string, finish string) (string, error) {
 	i := strings.Index(s, start)
 	if i < 0 {

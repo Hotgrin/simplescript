@@ -274,6 +274,19 @@ type GoBlockStmt struct {
 func (s *GoBlockStmt) stmtNode()      {}
 func (s *GoBlockStmt) String() string { return "(use-go ...)" }
 
+// SetFieldStmt writes a record field: set price of order to 249.
+type SetFieldStmt struct {
+	stmtBase
+	Member string
+	Target Expr
+	Value  Expr
+}
+
+func (s *SetFieldStmt) stmtNode() {}
+func (s *SetFieldStmt) String() string {
+	return "(set-field " + s.Member + " of " + s.Target.String() + " " + s.Value.String() + ")"
+}
+
 // AskStmt prompts the person running the program and stores their answer
 // (as text) under Var: ask "What is your name?" into name.
 type AskStmt struct {

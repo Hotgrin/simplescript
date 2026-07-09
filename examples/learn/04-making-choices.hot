@@ -1,0 +1,27 @@
+# ============================================
+#  04 — MAKING CHOICES (if / else)
+# ============================================
+# Programs decide things with 'if'. The
+# comparisons read the way you would say them:
+#   is        is not
+#   is greater than     is less than
+#   is at least         is at most
+
+set mark to 82
+
+if mark is at least 80
+    say "Distinction!"
+else if mark is at least 50
+    say "Passed."
+else
+    say "Not yet — try again."
+end if
+
+# Every 'if' closes with 'end if', so you can
+# always see where the choice finishes.
+
+# 'and' / 'or' combine conditions:
+set age to 15
+if age is at least 13 and age is at most 19
+    say "A teenager."
+end if

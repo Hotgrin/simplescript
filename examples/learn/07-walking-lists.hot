@@ -1,0 +1,17 @@
+# ============================================
+#  07 — WALKING A LIST (for each)
+# ============================================
+# 'repeat for each' visits every item in turn.
+
+set marks to list of 67, 82, 45, 91, 78
+
+# A running total, built one visit at a time:
+set total to 0
+repeat for each m in marks
+    say "mark: " plus m
+    set total to total plus m
+end repeat
+
+# And now the class average:
+say "Total:   " plus total
+say "Average: " plus (total divided by count of marks rounded to 1)

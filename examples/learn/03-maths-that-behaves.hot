@@ -1,0 +1,26 @@
+# ============================================
+#  03 — MATHS THAT BEHAVES
+# ============================================
+# hotgrin's arithmetic works like school maths.
+
+say 7 plus 3          # 10
+say 7 minus 3         # 4
+say 7 times 3         # 21
+
+# 'divided by' ALWAYS gives a decimal, because
+# that is what you meant:
+say 7 divided by 2    # 3.5
+
+# Brackets group, exactly like in class:
+say 2 plus 3 times 4       # 14  (times binds tighter)
+say (2 plus 3) times 4     # 20  (brackets first)
+
+# 'rounded to' trims decimals — great for money:
+say 10 divided by 3                 # 3.3333333333333335
+say 10 divided by 3 rounded to 2    # 3.33
+
+# 'increase' and 'decrease' change a value in place:
+set score to 10
+increase score by 5
+decrease score by 2
+say "Score: " plus score            # 13
