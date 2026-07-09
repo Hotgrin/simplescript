@@ -3,7 +3,19 @@
 All notable changes to hotgrin are recorded here. This project follows
 [Semantic Versioning](https://semver.org/) loosely while it is pre-1.0.
 
-## [0.5.4] - 2026-07-08
+## [0.5.6] - 2026-07-09
+
+### Fixed
+- **Version const now matches its release tag.** The [0.5.5] work below was
+  meant to ship as v0.5.4, but that tag number had already been used by a
+  same-day housekeeping commit, so the release automation tagged it v0.5.5
+  instead — while `cmd/hotgrin/main.go` still read `0.5.4`. `hotgrin
+  version` was reporting one release behind. Fixed, and the entry below is
+  relabeled to match what's actually in the v0.5.5 tag.
+- This is exactly the failure mode house rule 6 exists to catch — the rule
+  stays, the process just missed a step this once.
+
+## [0.5.5] - 2026-07-09
 
 ### Added
 - **The learn path**: `examples/learn/` — 27 numbered, heavily-commented
