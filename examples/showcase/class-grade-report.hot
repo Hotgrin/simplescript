@@ -1,0 +1,67 @@
+# Medium example: a class grade report.
+# Shows: records, lists, actions, and built-in tests — a shape close to
+# real classroom or small-business code.
+
+describe student
+    name is ""
+    mark is 0
+end describe
+
+action letter grade with score
+    if score is at least 80
+        give back "A"
+    end if
+    if score is at least 70
+        give back "B"
+    end if
+    if score is at least 60
+        give back "C"
+    end if
+    if score is at least 50
+        give back "D"
+    end if
+    give back "F"
+end action
+
+action class average with scores
+    set total to 0
+    repeat for each score in scores
+        increase total by score
+    end repeat
+    give back total divided by count of scores
+end action
+
+set alice to student
+set name of alice to "Alice"
+set mark of alice to 91
+
+set bilal to student
+set name of bilal to "Bilal"
+set mark of bilal to 67
+
+set chloe to student
+set name of chloe to "Chloe"
+set mark of chloe to 48
+
+set roll to list of alice, bilal, chloe
+set scores to list of 91, 67, 48
+
+say "Class report:"
+repeat for each s in roll
+    set g to letter grade with mark of s
+    say "  " plus name of s plus ": " plus mark of s plus " (" plus g plus ")"
+end repeat
+
+set avg to class average with scores
+say "Class average: " plus (avg rounded to 1)
+
+test "grade boundaries"
+    expect letter grade with 80 to be "A"
+    expect letter grade with 79 to be "B"
+    expect letter grade with 50 to be "D"
+    expect letter grade with 49 to be "F"
+end test
+
+test "class average is correct"
+    expect class average with list of 100, 50 to be 75
+end test

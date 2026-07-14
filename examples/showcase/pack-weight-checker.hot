@@ -1,0 +1,33 @@
+# Small example: a hiking pack weight checker.
+# Shows: units of measure, lists, repeat for each, the Watcher catching a
+# real mistake before it runs.
+
+use "std/text"
+
+set pack limit to 15 kg
+
+set items to list of 3.2 kg, 1.8 kg, 0.9 kg, 4.5 kg, 2.1 kg
+set names to list of "tent", "sleeping bag", "stove", "food", "clothes"
+
+set total to 0 kg
+repeat for each item weight in items
+    increase total by item weight
+end repeat
+
+say "Your pack:"
+set i to 0
+repeat count of items times
+    say "  " plus item i of names plus ": " plus item i of items
+    increase i by 1
+end repeat
+
+say "Total weight: " plus total
+say "Limit: " plus pack limit
+
+if total is greater than pack limit
+    set overage to total minus pack limit
+    say "Over by " plus overage plus " — something's gotta stay home."
+else
+    set spare amount to pack limit minus total
+    say "You've got " plus spare amount plus " to spare. Nice."
+end if

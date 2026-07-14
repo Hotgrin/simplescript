@@ -1,0 +1,24 @@
+# Small example: read a config file safely.
+# Shows: std/data, the fallible/try pattern, and a friendly fallback instead
+# of a crash when the file is missing.
+
+use "std/data"
+use "std/text"
+
+action load greeting with path
+    set message to "Hello, stranger"
+    try
+        set content to read file with path
+        set message to trim spaces with content
+    if it fails
+        set message to "Hello, stranger"
+    end try
+    give back message
+end action
+
+set message to load greeting with "greeting.txt"
+say message
+
+test "missing file falls back kindly"
+    expect load greeting with "does-not-exist.txt" to be "Hello, stranger"
+end test

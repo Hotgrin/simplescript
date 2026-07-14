@@ -1,0 +1,283 @@
+# ================================================================
+#  hotgrin site report — a flagship example
+# ================================================================
+# Concurrently checks a handful of URLs, handles the ones that
+# fail without crashing, and writes a plain-text report to disk.
+#
+# Language features used in this one program:
+#   - std/web    (fetch text with url — an HTTP GET)
+#   - std/text   (text length with)
+#   - std/data   (write file with — fallible, wrapped in try)
+#   - records    (describe / end describe, field read + write)
+#   - lists      (list of, put into, count of, repeat for each)
+#   - actions    (with parameters, give back)
+#   - fallible calls + try / if it fails
+#   - concurrency (at the same time / do ... into)
+#   - command-line input (input ... as ... default ...)
+#   - built-in tests (test / expect ... to be ...)
+#
+# THREE KNOWN LIMITATIONS this program had to be designed around
+# — worth knowing if you extend it, and each one reported:
+#
+#   1. Records can only be INSTANTIATED (`set x to <record type>`)
+#      at the top level of the program. Actions and test blocks
+#      can receive an existing record as a parameter and modify a
+#      copy of it, but cannot create a brand new one from scratch.
+#      Confirmed against the project's own lesson 26, which works
+#      around the same limit by never testing record-touching
+#      logic directly — only ever testing plain-value actions.
+#      This program follows the same split: a thin, untested
+#      record-shaping layer on top of a tested, primitive-only
+#      logic core.
+#
+#   2. 'list of nothing' — the documented way to seed a list to
+#      collect concurrent results into — doesn't just leave a
+#      phantom first entry (it transpiles to []any{nil}, not an
+#      empty slice): it also collapses the WHOLE list's type to
+#      `any`, so every real record collected afterward loses its
+#      field access (`r.Ok undefined (type any has no field...)`
+#      at the Go level). The workaround below seeds with a real,
+#      concretely-typed sentinel record instead of `nothing`, and
+#      filters it out by a marker field.
+#
+#   3. Only LITERAL 'do <call>' lines are safe directly inside
+#      'at the same time ... end at the same time'. Nesting a
+#      'repeat for each' loop in there to generate 'do' calls
+#      dynamically hangs the compiler indefinitely (confirmed:
+#      even 'hotgrin reveal', which only transpiles, never
+#      returns). Because of this, the four concurrent fetches
+#      below are written out one by one.
+# ================================================================
+
+use "std/web"
+use "std/text"
+use "std/data"
+
+# ---------------------------------------------------------------
+#  The record we collect one of, per site.
+# ---------------------------------------------------------------
+
+describe site result
+    label is ""
+    url is ""
+    ok is no
+    length is 0
+    detail is ""
+end describe
+
+# ---------------------------------------------------------------
+#  Fetching. Takes a blank template record plus a label and a
+#  url, and gives back a filled-in copy. Whatever happens, this
+#  always gives back a record, never a raw failure — that's what
+#  makes it safe to run several of these at the same time without
+#  one bad URL taking the others down with it.
+# ---------------------------------------------------------------
+
+action fetch site with template, label, url
+    set outcome to template
+    set label of outcome to label
+    set url of outcome to url
+    set ok of outcome to no
+    set length of outcome to 0
+    set detail of outcome to "not attempted"
+
+    try
+        set body to fetch text with url
+        set ok of outcome to yes
+        set length of outcome to text length with body
+    if it fails
+        set ok of outcome to no
+        set detail of outcome to the problem
+    end try
+
+    if ok of outcome
+        set detail of outcome to "reachable"
+    end if
+
+    give back outcome
+end action
+
+# ---------------------------------------------------------------
+#  Tested logic core. Every action here takes only plain values
+#  (text, numbers, truth, lists of those) — never a record — so
+#  every one of them can be exercised directly by a test, unlike
+#  the record-shaped layers above and below.
+# ---------------------------------------------------------------
+
+action status word with ok
+    if ok
+        give back "UP"
+    end if
+    give back "DOWN"
+end action
+
+action pad status with word
+    if word is "UP"
+        give back "UP  "
+    end if
+    give back word
+end action
+
+action format status line with ok, label, detail
+    set word to status word with ok
+    set padded to pad status with word
+    set line to padded plus "  " plus label
+    set line to line plus "  (" plus detail plus ")"
+    give back line
+end action
+
+action count matches with flags
+    set total to 0
+    repeat for each f in flags
+        if f
+            increase total by 1
+        end if
+    end repeat
+    give back total
+end action
+
+action list sum with numbers
+    set total to 0
+    repeat for each n in numbers
+        increase total by n
+    end repeat
+    give back total
+end action
+
+action average with numbers
+    set n to count of numbers
+    if n is 0
+        give back 0.0
+    end if
+    set total to list sum with numbers
+    set result to total divided by n
+    give back result
+end action
+
+# ---------------------------------------------------------------
+#  Record-shaped reporting layer. Thin on purpose, and NOT unit
+#  tested directly (see limitation 1) — it just unpacks records
+#  into plain values and does simple accumulation, reusing the
+#  tested core above wherever it can.
+# ---------------------------------------------------------------
+
+action divider
+    give back "----------------------------------------"
+end action
+
+action report body with results
+    set body to ""
+    repeat for each r in results
+        if url of r is not "__seed__"
+            set line to format status line with (ok of r), (label of r), (detail of r)
+            set body to body plus line plus "\n"
+        end if
+    end repeat
+    give back body
+end action
+
+action report summary with results
+    set checked to 0
+    set successes to 0
+    set total length to 0
+
+    repeat for each r in results
+        if url of r is not "__seed__"
+            increase checked by 1
+            if ok of r
+                increase successes by 1
+                increase total length by length of r
+            end if
+        end if
+    end repeat
+
+    set avg to 0.0
+    if successes is greater than 0
+        set avg to total length divided by successes
+    end if
+
+    set summary to divider
+    set summary to summary plus "\n"
+    set summary to summary plus successes plus " of " plus checked plus " sites reachable"
+    set summary to summary plus "\n"
+    set summary to summary plus "average response length: " plus (avg rounded to 1) plus " characters"
+    give back summary
+end action
+
+action build report with results
+    set report to "hotgrin site report"
+    set report to report plus "\n"
+    set report to report plus (divider)
+    set report to report plus "\n"
+    set report to report plus (report body with results)
+    set report to report plus (report summary with results)
+    give back report
+end action
+
+# ---------------------------------------------------------------
+#  Main program.
+# ---------------------------------------------------------------
+
+input output file as text default "site-report.txt"
+
+set blank result to site result
+set url of blank result to "__seed__"
+set results to list of blank result
+
+# Written out one by one on purpose — see known limitation 3 above.
+at the same time
+    do fetch site with blank result, "hotgrin README (GitHub raw)", "https://raw.githubusercontent.com/Hotgrin/hotgrin/main/README.md" into results
+    do fetch site with blank result, "Go language README (GitHub raw)", "https://raw.githubusercontent.com/golang/go/master/README.md" into results
+    do fetch site with blank result, "PyPI package info (requests)", "https://pypi.org/pypi/requests/json" into results
+    do fetch site with blank result, "a URL that does not exist", "https://nonexistent-domain-xyz-123.invalid" into results
+end at the same time
+
+say "hotgrin site report"
+say (divider)
+say (report body with results)
+say (report summary with results)
+
+set saved report to build report with results
+
+try
+    write file with output file, saved report
+    say ""
+    say "Saved to " plus output file
+if it fails
+    say ""
+    say "Could not save the report: " plus the problem
+end try
+
+# ---------------------------------------------------------------
+#  Tests. All pure, primitive-only logic — none of these touch
+#  the network or a record, so they run instantly, every time,
+#  unlike the fetches above.
+# ---------------------------------------------------------------
+
+test "status word reflects ok"
+    expect status word with true to be "UP"
+    expect status word with false to be "DOWN"
+end test
+
+test "pad status aligns UP with DOWN"
+    expect pad status with "UP" to be "UP  "
+    expect pad status with "DOWN" to be "DOWN"
+end test
+
+test "format status line includes the label and detail"
+    set line to format status line with true, "example site", "reachable"
+    expect line contains "example site"
+    expect line contains "reachable"
+end test
+
+test "count matches ignores false entries"
+    expect count matches with list of true, false, true, false, true to be 3
+end test
+
+test "list sum adds a list of numbers"
+    expect list sum with list of 10, 20, 30 to be 60
+end test
+
+test "average is correct"
+    expect average with list of 100, 200, 300 to be 200
+end test
