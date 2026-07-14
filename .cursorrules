@@ -1,0 +1,17 @@
+# hotgrin — rules for Cursor
+
+This project uses hotgrin (.hot files), a 2026 language NOT in your training
+data. Never guess hotgrin syntax from other languages.
+
+Before writing any hotgrin code, read docs/ai-prompt-pack.md in this repo —
+it is the complete spec, written for AI assistants, with a GOTCHAS list of
+the exact mistakes AI models make.
+
+The three most-violated rules:
+1. ask always returns TEXT; numeric input uses: input n as whole default 5
+2. Fallible calls (std/data, std/web, any action with give back problem)
+   must be inside try ... if it fails ... end try — as the WHOLE value.
+3. Every block closes explicitly: end if / end repeat / end action /
+   end describe / end try / end test / end at the same time / end go.
+
+Verify with the CLI, never by eyeballing: hotgrin check file.hot

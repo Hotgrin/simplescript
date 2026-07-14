@@ -4,7 +4,7 @@
 programming language released in 2026 — it is NOT in your training data. When
 asked to write hotgrin, use ONLY the syntax in this document. Never invent
 constructs that are not listed here. Follow the GOTCHAS section strictly —
-each one is a mistake AIs are likely to make. hotgrin v0.5.
+each one is a mistake AIs are likely to make. hotgrin 0.5.x (alpha).
 
 ## What hotgrin is
 
@@ -13,12 +13,36 @@ line-oriented (one statement per line, `#` starts a comment) and every block
 closes with an explicit `end` line. hotgrin transpiles to Go and compiles to a
 native executable. Run with `hotgrin run file.hot`.
 
+## The shape of every program (start from this skeleton)
+
+```
+# optional use lines first, then statements run top to bottom
+use "std/text"
+
+set greeting to "howzit"
+say upper case with greeting
+
+action double it with n
+    give back n times 2
+end action
+
+say double it with 21
+```
+
+No `main`, no imports beyond `use`, no semicolons, no braces or colons —
+blocks open with a keyword line and close with their matching `end` line.
+Verified output of the program above: `HOWZIT` then `42`.
+
 ## Names (critical — different from every other language)
 
 Names may contain **spaces**: `set cart total to 0` declares one variable
 named `cart total`. Names are bounded by reserved words (`to`, `of`, `with`,
 `is`, `plus`, `in`, ...). Consequences:
 - Never use a reserved word inside a name.
+- **Structural rule:** a spaced name must always be followed by a reserved
+  word or the end of the line — two distinct names can never sit next to
+  each other. `set final price to cart total times 2` works because `to`
+  and `times` bound the names; there is no way to write two adjacent names.
 - camelCase and snake_case are legal but unidiomatic — prefer spaced names.
 - Unicode names are fine.
 
@@ -186,6 +210,65 @@ the rate in base units (`5 km divided by 25 min` = metres per second).
     `by`, `into`, `as`, `repeat`. So
     `percent of`, an action called `starts with`, and a parameter called
     `start` are all invalid names.
+
+## AI instinct vs hotgrin (before/after — every "right" example verified)
+
+**Numeric input.** There is no text→number conversion, so `ask` cannot feed
+arithmetic.
+
+```
+# ❌ WRONG (instinct from other languages — will not check)
+ask "How old are you?" into age
+if age > 18
+    print("Welcome")
+
+# ✅ RIGHT (verified)
+input age as whole default 18
+
+if age is at least 18
+    say "Welcome"
+else
+    say "Too young"
+end if
+```
+
+**Fallible calls.** All of std/data and std/web can fail; the Watcher refuses
+a bare call.
+
+```
+# ❌ WRONG — error: 'read file' can fail, so use it inside a try block
+set content to read file with "notes.txt"
+
+# ✅ RIGHT (verified)
+try
+    set content to read file with "notes.txt"
+    say content
+if it fails
+    say "Could not read it: " plus the problem
+end try
+```
+
+**Reserved words inside names.** `start` is reserved, so `start time` is not
+a legal name — the parser fails immediately.
+
+```
+# ❌ WRONG — parse error: unexpected START
+set start time to 5
+
+# ✅ RIGHT (verified) — pick a name with no reserved word inside
+set begin time to 5
+say begin time
+```
+
+## Self-check before returning hotgrin code
+
+1. Does every block have its `end` line?
+2. Is every fallible call inside `try`, and is it the WHOLE right-hand side?
+3. Any `while / for / func / return / print / import / elif`? Replace them.
+4. Any reserved word inside a name (`start`, `count`, `item`, `to`, ...)?
+5. Numeric input via `input ... as whole/decimal`, never via `ask`?
+6. Only stdlib actions that are listed above — nothing invented?
+7. Actions use only their parameters — no top-level variables inside actions?
 
 ## Verified example (uses much of the language)
 
