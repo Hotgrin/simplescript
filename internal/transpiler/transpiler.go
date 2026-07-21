@@ -62,10 +62,11 @@ func (t ssType) goName() string {
 }
 
 type recordInfo struct {
-	goType  string
-	order   []string          // ss field names, in order
-	goField map[string]string // ss field -> Go field
-	ftype   map[string]ssType // ss field -> type
+	goType    string
+	order     []string          // ss field names, in order
+	goField   map[string]string // ss field -> Go field
+	ftype     map[string]ssType // ss field -> type
+	fieldExpr map[string]ast.Expr // ss field -> default-value expression, for re-emitting the prototype as a fresh literal anywhere it's referenced
 }
 
 type funcSig struct {
@@ -84,6 +85,7 @@ type Transpiler struct {
 	prog *ast.Program
 
 	records         map[string]recordInfo // keyed by Go type name
+	recordProtos    map[string]string     // record's own prototype name (e.g. "point") -> its Go type; used to reconstruct a fresh literal wherever the prototype is referenced as a whole value, since the prototype's own Go variable only exists in the function where 'describe' appeared
 	funcs           map[string]funcSig    // keyed by Go func name
 	scope           map[string]ssType     // variable Go name -> type (current function)
 	declared        map[string]bool       // variable Go name -> already declared in Go
@@ -114,7 +116,8 @@ type Transpiler struct {
 func New(prog *ast.Program) *Transpiler {
 	return &Transpiler{
 		prog:     prog,
-		records:  map[string]recordInfo{},
+		records:      map[string]recordInfo{},
+		recordProtos: map[string]string{},
 		funcs:    map[string]funcSig{},
 		scope:    map[string]ssType{},
 		declared: map[string]bool{},
@@ -320,6 +323,11 @@ func (t *Transpiler) collectRecords() {
 				walk(n.Body)
 			case *ast.ActionStmt:
 				walk(n.Body)
+			case *ast.TestStmt:
+				walk(n.Body)
+			case *ast.TryStmt:
+				walk(n.Body)
+				walk(n.Handler)
 			}
 		}
 	}
@@ -329,19 +337,57 @@ func (t *Transpiler) collectRecords() {
 func (t *Transpiler) registerRecord(n *ast.DescribeStmt) {
 	goType := titleFirst(sanitize(n.Name)) + "T"
 	ri := recordInfo{
-		goType:  goType,
-		goField: map[string]string{},
-		ftype:   map[string]ssType{},
+		goType:    goType,
+		goField:   map[string]string{},
+		ftype:     map[string]ssType{},
+		fieldExpr: map[string]ast.Expr{},
 	}
 	for _, f := range n.Fields {
 		ri.order = append(ri.order, f.Name)
 		ri.goField[f.Name] = titleFirst(sanitize(f.Name))
 		ri.ftype[f.Name] = t.typeOf(f.Value)
+		ri.fieldExpr[f.Name] = f.Value
 	}
 	t.records[goType] = ri
 	t.recordDeclOrder = append(t.recordDeclOrder, goType)
 	// the record's value variable has this record type
 	t.scope[sanitize(n.Name)] = ssType{kind: "record", name: goType}
+	t.recordProtos[sanitize(n.Name)] = goType
+}
+
+// emitRecordLiteral reconstructs a record's prototype as a fresh, self-
+// contained Go struct literal (e.g. PointT{X: 0, Y: 0}). Used wherever a
+// prototype's own name is referenced as a whole value (set p to point,
+// give back point) — the prototype's own Go variable only exists inside
+// the function where 'describe' happened, so any other function needs its
+// own independent copy built from the same field defaults, not a reference
+// to a variable it can't see.
+func (t *Transpiler) emitRecordLiteral(goType string) string {
+	ri := t.records[goType]
+	var b strings.Builder
+	b.WriteString(goType + "{\n")
+	for _, fname := range ri.order {
+		b.WriteString(ri.goField[fname] + ": " + t.emitExpr(ri.fieldExpr[fname]) + ",\n")
+	}
+	b.WriteString("}")
+	return b.String()
+}
+
+// valueExpr emits an expression the way emitExpr does, except when the
+// expression is a bare reference to a record's own prototype name — in
+// that one case it reconstructs a fresh struct literal instead of a plain
+// identifier, since the prototype's Go variable only exists in whatever
+// function 'describe' happened to appear in. Used for contexts where a
+// prototype is being read as a whole value (set p to point, give back
+// point) rather than having one of its fields mutated directly (set x of
+// point to 5 keeps working exactly as before — that path never calls this).
+func (t *Transpiler) valueExpr(e ast.Expr) string {
+	if id, ok := e.(*ast.Identifier); ok {
+		if goType, isProto := t.recordProtos[sanitize(id.Name)]; isProto {
+			return t.emitRecordLiteral(goType)
+		}
+	}
+	return t.emitExpr(e)
 }
 
 // seedTopLevelVars pre-computes the type of each top-level variable so that
@@ -1138,7 +1184,7 @@ func (t *Transpiler) emitStmt(s ast.Stmt) string {
 
 	case *ast.SetStmt:
 		name := sanitize(n.Name)
-		val := t.emitExpr(n.Value)
+		val := t.valueExpr(n.Value)
 		t.scope[name] = t.typeOf(n.Value)
 		if t.declared[name] {
 			return name + " = " + val
@@ -1194,9 +1240,9 @@ func (t *Transpiler) emitStmt(s ast.Stmt) string {
 			return "return " + zeroValue(t.fallibleRet) + ", errors.New(" + t.emitExpr(n.Value) + ")"
 		}
 		if t.inFallible {
-			return "return " + t.emitExpr(n.Value) + ", nil"
+			return "return " + t.valueExpr(n.Value) + ", nil"
 		}
-		return "return " + t.emitExpr(n.Value)
+		return "return " + t.valueExpr(n.Value)
 
 	case *ast.TryStmt:
 		return t.emitTry(n)
@@ -1275,7 +1321,14 @@ func (t *Transpiler) emitDescribe(n *ast.DescribeStmt) string {
 	for _, f := range n.Fields {
 		b.WriteString(ri.goField[f.Name] + ": " + t.emitExpr(f.Value) + ",\n")
 	}
-	b.WriteString("}")
+	b.WriteString("}\n")
+	// A prototype's own Go variable is only ever needed for direct field
+	// mutation in this same scope (set x of proto to y) — every other
+	// reference now reconstructs a fresh literal via valueExpr instead of
+	// naming this variable, so it can end up genuinely unread. Guard
+	// against Go's "declared and not used" the same way SetStmt already
+	// does; harmless and redundant if it IS mutated directly here too.
+	b.WriteString("_ = " + name)
 	return b.String()
 }
 
@@ -1372,12 +1425,12 @@ func (t *Transpiler) emitTest(n *ast.TestStmt) string {
 func (t *Transpiler) emitExpect(n *ast.ExpectStmt) string {
 	gv := fmt.Sprintf("got%d", t.uid())
 	var b strings.Builder
-	b.WriteString(gv + " := " + t.emitExpr(n.Actual) + "\n")
+	b.WriteString(gv + " := " + t.valueExpr(n.Actual) + "\n")
 
 	switch n.Op {
 	case "=", ">=", "<=", "<", ">":
 		wv := fmt.Sprintf("want%d", t.uid())
-		b.WriteString(wv + " := " + t.emitExpr(n.Expected) + "\n")
+		b.WriteString(wv + " := " + t.valueExpr(n.Expected) + "\n")
 		goOp := n.Op
 		if goOp == "=" {
 			goOp = "=="
@@ -1394,7 +1447,7 @@ func (t *Transpiler) emitExpect(n *ast.ExpectStmt) string {
 		b.WriteString(fmt.Sprintf("t.Errorf(\"expected %%v %s %%v\", %s, %s)\n}", opWord(n.Op), gv, wv))
 	case "contains":
 		wv := fmt.Sprintf("want%d", t.uid())
-		b.WriteString(wv + " := " + t.emitExpr(n.Expected) + "\n")
+		b.WriteString(wv + " := " + t.valueExpr(n.Expected) + "\n")
 		if t.typeOf(n.Actual).kind == "string" {
 			t.needTestStrings = true
 			b.WriteString("if !strings.Contains(" + gv + ", " + wv + ") {\n")

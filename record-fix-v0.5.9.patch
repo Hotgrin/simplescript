@@ -1,0 +1,391 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 0cd61c5..7a4540f 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -3,6 +3,35 @@
+ All notable changes to hotgrin are recorded here. This project follows
+ [Semantic Versioning](https://semver.org/) loosely while it is pre-1.0.
+ 
++## [0.5.9] - 2026-07-21
++
++### Fixed
++- **Record prototypes can now be used as a whole value from any scope** —
++  previously, `set p to point` (or `give back point`, or `expect x to be
++  point`) only worked when written in the exact same scope as the
++  `describe point` that declared it. Referencing a prototype from inside
++  an `action`, a `test` block, or a `try` block elsewhere either got
++  wrongly blocked by the Watcher with "there is no value called 'point'
++  here," or — if the Watcher check happened to be bypassed — produced Go
++  that failed to compile with `undefined: point`, because `describe`
++  transpiles a prototype into a real local Go variable that only exists in
++  the function where it was written.
++  Root cause and fix, precisely: the Watcher's identifier check now
++  recognizes record-prototype names as valid from any scope (mirroring
++  the existing action-name fallback), and the transpiler now reconstructs
++  a fresh, self-contained struct literal wherever a prototype is
++  referenced as a whole value, instead of naming a variable that may not
++  be visible from the current function. Direct field mutation on a
++  prototype (`set grade of learner to "distinction"`, used in several
++  shipped examples) is untouched — that still operates on the real
++  variable exactly as before.
++  Two earlier sessions worked on this bug without the fix ever reaching
++  the remote; this is the real fix, verified: full internal test suite
++  green, four hand-built repro cases (record used inside an action, a
++  `try` block, a `try` nested in an action, and a `test` block including
++  an `expect ... to be <prototype>` assertion) all pass, and all 60
++  example `.hot` files in `examples/` run clean with no regressions.
++
+ ## [0.5.8] - 2026-07-21
+ 
+ ### Added
+diff --git a/PROJECT-STATE.md b/PROJECT-STATE.md
+index aeccfc3..6d5d51b 100644
+--- a/PROJECT-STATE.md
++++ b/PROJECT-STATE.md
+@@ -11,15 +11,23 @@ what's next. If a chat and this file disagree, **this file wins** — it's
+ checked against source; a chat summary might describe a sandbox that never
+ got pushed.
+ 
+-Last verified against remote: **2026-07-21**, commit `274ccc1`, tag `v0.5.7`.
++Last verified against remote: **2026-07-21**, commit `aeb029d`, tag `v0.5.8`.
++This update (record-instantiation fix, v0.5.9) prepared but not yet pushed
++as of this writing — see Mid-flight below.
+ 
+ ---
+ 
+ ## Shipped, confirmed on the real remote
+ 
+-- **v0.5.7** is the latest tag, verified via fresh clone + full build/vet/
+-  test + every code snippet actually run through the compiled binary.
+-  **Day Zero** (`docs/day-zero.md`) is live and wired in.
++- **v0.5.8** is the latest tag, verified via fresh clone + tag-points-at-
++  correct-commit check + full build/vet/test + every code snippet actually
++  run through the compiled binary. **Day Zero and Day One**
++  (`docs/day-zero.md`, `docs/day-one.md`) are both live and wired in,
++  telling one continuous story (same tea example throughout).
++- **gobug** (`github.com/Hotgrin/gobug`) — separate side project, CI fully
++  fixed and confirmed: v0.2.1 release has three real attached binaries
++  (Windows, macOS, Linux), verified by checking the actual release page,
++  not just a green CI checkmark.
+ - **v0.5.6** and earlier: core language is stable: units of measure,
+   `std/web`, built-in testing, the Watcher, bilingual (English/Afrikaans)
+   errors, remote GitHub libraries, `use go` escape hatch.
+@@ -33,19 +41,28 @@ Last verified against remote: **2026-07-21**, commit `274ccc1`, tag `v0.5.7`.
+ 
+ ## Mid-flight — needs a decision or re-verification, not assumed done
+ 
+-- **Day One** (`docs/day-one.md`) — written, every code block live-tested
+-  (including the comment-only skeletons, confirmed to run silently with a
+-  clean Watcher). Wired into README, `getting-started.md`,
+-  `examples/learn/README.md`; Day Zero's closing pointer updated to route
+-  through it instead of straight to Lesson 01. Version bump to **v0.5.8**
+-  prepared. **Not yet pushed to GitHub as of this writing.**
+-- **Record-instantiation compiler fix** (records failing to instantiate
+-  inside `test`/`try` blocks) — worked on in two separate sessions
+-  (2026-07-16 and 2026-07-20). One session's summary claims it was fixed,
+-  tested, and tagged v0.5.7; the actual remote shows no such tag and no
+-  such commit. **Treat this bug as still open until someone re-verifies
+-  against a fresh clone and actually pushes.** Don't assume it's fixed
+-  because a past chat said so.
++- **Record-instantiation fix (v0.5.9)** — the bug is real (confirmed by
++  building minimal repros before touching any code) and now genuinely
++  fixed, not just reasoned about: record prototypes (`describe point`)
++  can be used as a whole value (`set p to point`, `give back point`,
++  `expect x to be point`) from any scope — inside actions, `try` blocks,
++  `test` blocks, and combinations of those — not just the exact scope
++  where `describe` first appeared. Root cause: `describe` transpiles a
++  prototype into a real local Go variable that only exists in the
++  function where it's written; referencing it elsewhere either got
++  wrongly blocked by the Watcher or produced Go that failed to compile.
++  Fixed at both the Watcher (recognizes record-prototype names as valid
++  from any scope) and the transpiler (reconstructs a fresh, independent
++  struct literal wherever a prototype is used as a whole value, while
++  direct field mutation on a prototype — a real pattern already used in
++  shipped examples — is untouched). Verified: full internal test suite
++  green, four hand-built repro cases all pass (including an actual
++  `hotgrin test` run, not just `hotgrin run`), and all 60 example `.hot`
++  files in `examples/` run clean with no regressions. **Prepared, not yet
++  pushed to GitHub as of this writing** — the one blocking step.
++  Two earlier sessions worked on a version of this bug without it ever
++  reaching the remote (see git history — no matching commit or tag
++  existed before this fix); this entry is the one that's actually true.
+ - **Known engine bugs from the 2026-07-16 audit**, drafted as GitHub issues
+   but not confirmed filed (checking was blocked by API rate limits when
+   this file was written — reconfirm next session):
+@@ -53,18 +70,12 @@ Last verified against remote: **2026-07-21**, commit `274ccc1`, tag `v0.5.7`.
+      statement other than a literal `do` line.
+   2. HIGH — `list of nothing` collapses the whole list's type to `any`,
+      breaking field access on collected records.
+-  3. HIGH — record instantiation inside actions/test blocks (see above —
+-     possibly the same root cause already partially diagnosed).
+-  4. MEDIUM — `give back` inside `try` breaks the build while the Watcher
++  3. MEDIUM — `give back` inside `try` breaks the build while the Watcher
+      says "All good."
+-  5. MEDIUM — writing to an unknown record field passes the Watcher, then
++  4. MEDIUM — writing to an unknown record field passes the Watcher, then
+      fails at Go compile.
+-  6. LOW — two genuine Watcher false alarms on variables that are clearly
++  5. LOW — two genuine Watcher false alarms on variables that are clearly
+      used.
+-- **gobug** (`github.com/Hotgrin/gobug`) — a separate, real side project
+-  (friendly Go error explainer, Wails desktop app, v0.2.0 tagged). CI fix
+-  prepared (release permissions + macOS runner pinned off Tahoe/LC_UUID
+-  issue) but not yet applied/pushed as of this writing.
+ 
+ ## Decided — house rules, don't relitigate
+ 
+@@ -86,14 +97,20 @@ Last verified against remote: **2026-07-21**, commit `274ccc1`, tag `v0.5.7`.
+ - **Live verification only.** Nothing ships without being built, `go vet`,
+   `go test`, and (for `.hot` code) actually run through the compiled
+   binary — never eyeballed or assumed correct from reading source.
++- **Check `git tag` before creating a new tag, every time.** A stale local
++  tag silently pointing at the wrong commit shipped as v0.5.8's *first*
++  attempt — `git tag vX.Y.Z` doesn't overwrite an existing tag, it just
++  fails quietly enough to miss, and the wrong commit gets released. Always
++  `git tag` first to check for a collision, and after pushing, verify via
++  fresh clone that the tag actually points at the commit you meant.
+ 
+ ## Beginner-education initiative — status
+ 
+ Sequence agreed: **Day Zero → Day One → living glossary → first
+ micro-lessons → AI Mentor**, with community-building ("Study Stoep") and
+ the hotgrin.com homepage redesign running alongside whenever there's room.
+-Day Zero and Day One are built (Day One mid-flight, see above). Homepage
+-redesign was proposed but not started; glossary and AI Mentor not started.
++Day Zero and Day One are both shipped (v0.5.8). Homepage redesign was
++proposed but not started; glossary and AI Mentor not started.
+ 
+ ## Marketing / launch — status
+ 
+@@ -120,12 +137,11 @@ entry, not a sign to go digging through old chats.
+ 
+ ## Next up
+ 
+-1. Push the Day One patch (v0.5.8) — the one blocking step to close that
+-   loop.
+-2. Push the gobug CI fix.
+-3. Re-verify the record-instantiation bug against a fresh clone; ship it
+-   properly (as v0.5.9, since v0.5.7/v0.5.8 are now Day Zero/Day One) if
+-   still broken.
+-4. Living glossary or first micro-lessons — next beginner-education piece
++1. Push the record-instantiation fix (v0.5.9) — the one blocking step to
++   close that loop.
++2. Living glossary or first micro-lessons — next beginner-education piece
+    after Day One.
+-5. hotgrin.com homepage redesign (simple, plain-language nav, one button).
++3. hotgrin.com homepage redesign (simple, plain-language nav, one button).
++4. Confirm whether the ZATech launch post actually went out, and whether
++   the six audited engine bugs became real GitHub issues (both still
++   unconfirmed as of this writing).
+diff --git a/cmd/hotgrin/main.go b/cmd/hotgrin/main.go
+index d32548e..4f6b68f 100644
+--- a/cmd/hotgrin/main.go
++++ b/cmd/hotgrin/main.go
+@@ -24,7 +24,7 @@ import (
+ 	"github.com/hotgrin/hotgrin/internal/watcher"
+ )
+ 
+-const version = "hotgrin 0.5.8"
++const version = "hotgrin 0.5.9"
+ 
+ func main() {
+ 	af := false
+diff --git a/internal/transpiler/transpiler.go b/internal/transpiler/transpiler.go
+index 47f034c..6e953db 100644
+--- a/internal/transpiler/transpiler.go
++++ b/internal/transpiler/transpiler.go
+@@ -62,10 +62,11 @@ func (t ssType) goName() string {
+ }
+ 
+ type recordInfo struct {
+-	goType  string
+-	order   []string          // ss field names, in order
+-	goField map[string]string // ss field -> Go field
+-	ftype   map[string]ssType // ss field -> type
++	goType    string
++	order     []string          // ss field names, in order
++	goField   map[string]string // ss field -> Go field
++	ftype     map[string]ssType // ss field -> type
++	fieldExpr map[string]ast.Expr // ss field -> default-value expression, for re-emitting the prototype as a fresh literal anywhere it's referenced
+ }
+ 
+ type funcSig struct {
+@@ -84,6 +85,7 @@ type Transpiler struct {
+ 	prog *ast.Program
+ 
+ 	records         map[string]recordInfo // keyed by Go type name
++	recordProtos    map[string]string     // record's own prototype name (e.g. "point") -> its Go type; used to reconstruct a fresh literal wherever the prototype is referenced as a whole value, since the prototype's own Go variable only exists in the function where 'describe' appeared
+ 	funcs           map[string]funcSig    // keyed by Go func name
+ 	scope           map[string]ssType     // variable Go name -> type (current function)
+ 	declared        map[string]bool       // variable Go name -> already declared in Go
+@@ -114,7 +116,8 @@ type Transpiler struct {
+ func New(prog *ast.Program) *Transpiler {
+ 	return &Transpiler{
+ 		prog:     prog,
+-		records:  map[string]recordInfo{},
++		records:      map[string]recordInfo{},
++		recordProtos: map[string]string{},
+ 		funcs:    map[string]funcSig{},
+ 		scope:    map[string]ssType{},
+ 		declared: map[string]bool{},
+@@ -320,6 +323,11 @@ func (t *Transpiler) collectRecords() {
+ 				walk(n.Body)
+ 			case *ast.ActionStmt:
+ 				walk(n.Body)
++			case *ast.TestStmt:
++				walk(n.Body)
++			case *ast.TryStmt:
++				walk(n.Body)
++				walk(n.Handler)
+ 			}
+ 		}
+ 	}
+@@ -329,19 +337,57 @@ func (t *Transpiler) collectRecords() {
+ func (t *Transpiler) registerRecord(n *ast.DescribeStmt) {
+ 	goType := titleFirst(sanitize(n.Name)) + "T"
+ 	ri := recordInfo{
+-		goType:  goType,
+-		goField: map[string]string{},
+-		ftype:   map[string]ssType{},
++		goType:    goType,
++		goField:   map[string]string{},
++		ftype:     map[string]ssType{},
++		fieldExpr: map[string]ast.Expr{},
+ 	}
+ 	for _, f := range n.Fields {
+ 		ri.order = append(ri.order, f.Name)
+ 		ri.goField[f.Name] = titleFirst(sanitize(f.Name))
+ 		ri.ftype[f.Name] = t.typeOf(f.Value)
++		ri.fieldExpr[f.Name] = f.Value
+ 	}
+ 	t.records[goType] = ri
+ 	t.recordDeclOrder = append(t.recordDeclOrder, goType)
+ 	// the record's value variable has this record type
+ 	t.scope[sanitize(n.Name)] = ssType{kind: "record", name: goType}
++	t.recordProtos[sanitize(n.Name)] = goType
++}
++
++// emitRecordLiteral reconstructs a record's prototype as a fresh, self-
++// contained Go struct literal (e.g. PointT{X: 0, Y: 0}). Used wherever a
++// prototype's own name is referenced as a whole value (set p to point,
++// give back point) — the prototype's own Go variable only exists inside
++// the function where 'describe' happened, so any other function needs its
++// own independent copy built from the same field defaults, not a reference
++// to a variable it can't see.
++func (t *Transpiler) emitRecordLiteral(goType string) string {
++	ri := t.records[goType]
++	var b strings.Builder
++	b.WriteString(goType + "{\n")
++	for _, fname := range ri.order {
++		b.WriteString(ri.goField[fname] + ": " + t.emitExpr(ri.fieldExpr[fname]) + ",\n")
++	}
++	b.WriteString("}")
++	return b.String()
++}
++
++// valueExpr emits an expression the way emitExpr does, except when the
++// expression is a bare reference to a record's own prototype name — in
++// that one case it reconstructs a fresh struct literal instead of a plain
++// identifier, since the prototype's Go variable only exists in whatever
++// function 'describe' happened to appear in. Used for contexts where a
++// prototype is being read as a whole value (set p to point, give back
++// point) rather than having one of its fields mutated directly (set x of
++// point to 5 keeps working exactly as before — that path never calls this).
++func (t *Transpiler) valueExpr(e ast.Expr) string {
++	if id, ok := e.(*ast.Identifier); ok {
++		if goType, isProto := t.recordProtos[sanitize(id.Name)]; isProto {
++			return t.emitRecordLiteral(goType)
++		}
++	}
++	return t.emitExpr(e)
+ }
+ 
+ // seedTopLevelVars pre-computes the type of each top-level variable so that
+@@ -1138,7 +1184,7 @@ func (t *Transpiler) emitStmt(s ast.Stmt) string {
+ 
+ 	case *ast.SetStmt:
+ 		name := sanitize(n.Name)
+-		val := t.emitExpr(n.Value)
++		val := t.valueExpr(n.Value)
+ 		t.scope[name] = t.typeOf(n.Value)
+ 		if t.declared[name] {
+ 			return name + " = " + val
+@@ -1194,9 +1240,9 @@ func (t *Transpiler) emitStmt(s ast.Stmt) string {
+ 			return "return " + zeroValue(t.fallibleRet) + ", errors.New(" + t.emitExpr(n.Value) + ")"
+ 		}
+ 		if t.inFallible {
+-			return "return " + t.emitExpr(n.Value) + ", nil"
++			return "return " + t.valueExpr(n.Value) + ", nil"
+ 		}
+-		return "return " + t.emitExpr(n.Value)
++		return "return " + t.valueExpr(n.Value)
+ 
+ 	case *ast.TryStmt:
+ 		return t.emitTry(n)
+@@ -1275,7 +1321,14 @@ func (t *Transpiler) emitDescribe(n *ast.DescribeStmt) string {
+ 	for _, f := range n.Fields {
+ 		b.WriteString(ri.goField[f.Name] + ": " + t.emitExpr(f.Value) + ",\n")
+ 	}
+-	b.WriteString("}")
++	b.WriteString("}\n")
++	// A prototype's own Go variable is only ever needed for direct field
++	// mutation in this same scope (set x of proto to y) — every other
++	// reference now reconstructs a fresh literal via valueExpr instead of
++	// naming this variable, so it can end up genuinely unread. Guard
++	// against Go's "declared and not used" the same way SetStmt already
++	// does; harmless and redundant if it IS mutated directly here too.
++	b.WriteString("_ = " + name)
+ 	return b.String()
+ }
+ 
+@@ -1372,12 +1425,12 @@ func (t *Transpiler) emitTest(n *ast.TestStmt) string {
+ func (t *Transpiler) emitExpect(n *ast.ExpectStmt) string {
+ 	gv := fmt.Sprintf("got%d", t.uid())
+ 	var b strings.Builder
+-	b.WriteString(gv + " := " + t.emitExpr(n.Actual) + "\n")
++	b.WriteString(gv + " := " + t.valueExpr(n.Actual) + "\n")
+ 
+ 	switch n.Op {
+ 	case "=", ">=", "<=", "<", ">":
+ 		wv := fmt.Sprintf("want%d", t.uid())
+-		b.WriteString(wv + " := " + t.emitExpr(n.Expected) + "\n")
++		b.WriteString(wv + " := " + t.valueExpr(n.Expected) + "\n")
+ 		goOp := n.Op
+ 		if goOp == "=" {
+ 			goOp = "=="
+@@ -1394,7 +1447,7 @@ func (t *Transpiler) emitExpect(n *ast.ExpectStmt) string {
+ 		b.WriteString(fmt.Sprintf("t.Errorf(\"expected %%v %s %%v\", %s, %s)\n}", opWord(n.Op), gv, wv))
+ 	case "contains":
+ 		wv := fmt.Sprintf("want%d", t.uid())
+-		b.WriteString(wv + " := " + t.emitExpr(n.Expected) + "\n")
++		b.WriteString(wv + " := " + t.valueExpr(n.Expected) + "\n")
+ 		if t.typeOf(n.Actual).kind == "string" {
+ 			t.needTestStrings = true
+ 			b.WriteString("if !strings.Contains(" + gv + ", " + wv + ") {\n")
+diff --git a/internal/watcher/watcher.go b/internal/watcher/watcher.go
+index 556ac3a..59e8063 100644
+--- a/internal/watcher/watcher.go
++++ b/internal/watcher/watcher.go
+@@ -189,6 +189,11 @@ func (w *Watcher) collect() {
+ 				walk(n.Body)
+ 			case *ast.ForEachStmt:
+ 				walk(n.Body)
++			case *ast.TestStmt:
++				walk(n.Body)
++			case *ast.TryStmt:
++				walk(n.Body)
++				walk(n.Handler)
+ 			}
+ 		}
+ 	}
+@@ -385,7 +390,9 @@ func (w *Watcher) checkExpr(e ast.Expr, names map[string]bool) {
+ 	switch x := e.(type) {
+ 	case *ast.Identifier:
+ 		if !names[x.Name] {
+-			if _, isAction := w.actions[x.Name]; !isAction {
++			_, isAction := w.actions[x.Name]
++			_, isRecordProto := w.records[x.Name]
++			if !isAction && !isRecordProto {
+ 				w.add(Error, x.Line,
+ 					fmt.Sprintf("there is no value called '%s' here — is it a typo, or did you forget to set it?", x.Name),
+ 					fmt.Sprintf("daar is geen waarde genaamd '%s' hier nie — is dit 'n tikfout, of het jy vergeet om dit te stel?", x.Name))

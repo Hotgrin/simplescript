@@ -3,6 +3,35 @@
 All notable changes to hotgrin are recorded here. This project follows
 [Semantic Versioning](https://semver.org/) loosely while it is pre-1.0.
 
+## [0.5.9] - 2026-07-21
+
+### Fixed
+- **Record prototypes can now be used as a whole value from any scope** —
+  previously, `set p to point` (or `give back point`, or `expect x to be
+  point`) only worked when written in the exact same scope as the
+  `describe point` that declared it. Referencing a prototype from inside
+  an `action`, a `test` block, or a `try` block elsewhere either got
+  wrongly blocked by the Watcher with "there is no value called 'point'
+  here," or — if the Watcher check happened to be bypassed — produced Go
+  that failed to compile with `undefined: point`, because `describe`
+  transpiles a prototype into a real local Go variable that only exists in
+  the function where it was written.
+  Root cause and fix, precisely: the Watcher's identifier check now
+  recognizes record-prototype names as valid from any scope (mirroring
+  the existing action-name fallback), and the transpiler now reconstructs
+  a fresh, self-contained struct literal wherever a prototype is
+  referenced as a whole value, instead of naming a variable that may not
+  be visible from the current function. Direct field mutation on a
+  prototype (`set grade of learner to "distinction"`, used in several
+  shipped examples) is untouched — that still operates on the real
+  variable exactly as before.
+  Two earlier sessions worked on this bug without the fix ever reaching
+  the remote; this is the real fix, verified: full internal test suite
+  green, four hand-built repro cases (record used inside an action, a
+  `try` block, a `try` nested in an action, and a `test` block including
+  an `expect ... to be <prototype>` assertion) all pass, and all 60
+  example `.hot` files in `examples/` run clean with no regressions.
+
 ## [0.5.8] - 2026-07-21
 
 ### Added

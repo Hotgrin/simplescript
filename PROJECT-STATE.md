@@ -11,15 +11,23 @@ what's next. If a chat and this file disagree, **this file wins** — it's
 checked against source; a chat summary might describe a sandbox that never
 got pushed.
 
-Last verified against remote: **2026-07-21**, commit `274ccc1`, tag `v0.5.7`.
+Last verified against remote: **2026-07-21**, commit `aeb029d`, tag `v0.5.8`.
+This update (record-instantiation fix, v0.5.9) prepared but not yet pushed
+as of this writing — see Mid-flight below.
 
 ---
 
 ## Shipped, confirmed on the real remote
 
-- **v0.5.7** is the latest tag, verified via fresh clone + full build/vet/
-  test + every code snippet actually run through the compiled binary.
-  **Day Zero** (`docs/day-zero.md`) is live and wired in.
+- **v0.5.8** is the latest tag, verified via fresh clone + tag-points-at-
+  correct-commit check + full build/vet/test + every code snippet actually
+  run through the compiled binary. **Day Zero and Day One**
+  (`docs/day-zero.md`, `docs/day-one.md`) are both live and wired in,
+  telling one continuous story (same tea example throughout).
+- **gobug** (`github.com/Hotgrin/gobug`) — separate side project, CI fully
+  fixed and confirmed: v0.2.1 release has three real attached binaries
+  (Windows, macOS, Linux), verified by checking the actual release page,
+  not just a green CI checkmark.
 - **v0.5.6** and earlier: core language is stable: units of measure,
   `std/web`, built-in testing, the Watcher, bilingual (English/Afrikaans)
   errors, remote GitHub libraries, `use go` escape hatch.
@@ -33,19 +41,28 @@ Last verified against remote: **2026-07-21**, commit `274ccc1`, tag `v0.5.7`.
 
 ## Mid-flight — needs a decision or re-verification, not assumed done
 
-- **Day One** (`docs/day-one.md`) — written, every code block live-tested
-  (including the comment-only skeletons, confirmed to run silently with a
-  clean Watcher). Wired into README, `getting-started.md`,
-  `examples/learn/README.md`; Day Zero's closing pointer updated to route
-  through it instead of straight to Lesson 01. Version bump to **v0.5.8**
-  prepared. **Not yet pushed to GitHub as of this writing.**
-- **Record-instantiation compiler fix** (records failing to instantiate
-  inside `test`/`try` blocks) — worked on in two separate sessions
-  (2026-07-16 and 2026-07-20). One session's summary claims it was fixed,
-  tested, and tagged v0.5.7; the actual remote shows no such tag and no
-  such commit. **Treat this bug as still open until someone re-verifies
-  against a fresh clone and actually pushes.** Don't assume it's fixed
-  because a past chat said so.
+- **Record-instantiation fix (v0.5.9)** — the bug is real (confirmed by
+  building minimal repros before touching any code) and now genuinely
+  fixed, not just reasoned about: record prototypes (`describe point`)
+  can be used as a whole value (`set p to point`, `give back point`,
+  `expect x to be point`) from any scope — inside actions, `try` blocks,
+  `test` blocks, and combinations of those — not just the exact scope
+  where `describe` first appeared. Root cause: `describe` transpiles a
+  prototype into a real local Go variable that only exists in the
+  function where it's written; referencing it elsewhere either got
+  wrongly blocked by the Watcher or produced Go that failed to compile.
+  Fixed at both the Watcher (recognizes record-prototype names as valid
+  from any scope) and the transpiler (reconstructs a fresh, independent
+  struct literal wherever a prototype is used as a whole value, while
+  direct field mutation on a prototype — a real pattern already used in
+  shipped examples — is untouched). Verified: full internal test suite
+  green, four hand-built repro cases all pass (including an actual
+  `hotgrin test` run, not just `hotgrin run`), and all 60 example `.hot`
+  files in `examples/` run clean with no regressions. **Prepared, not yet
+  pushed to GitHub as of this writing** — the one blocking step.
+  Two earlier sessions worked on a version of this bug without it ever
+  reaching the remote (see git history — no matching commit or tag
+  existed before this fix); this entry is the one that's actually true.
 - **Known engine bugs from the 2026-07-16 audit**, drafted as GitHub issues
   but not confirmed filed (checking was blocked by API rate limits when
   this file was written — reconfirm next session):
@@ -53,18 +70,12 @@ Last verified against remote: **2026-07-21**, commit `274ccc1`, tag `v0.5.7`.
      statement other than a literal `do` line.
   2. HIGH — `list of nothing` collapses the whole list's type to `any`,
      breaking field access on collected records.
-  3. HIGH — record instantiation inside actions/test blocks (see above —
-     possibly the same root cause already partially diagnosed).
-  4. MEDIUM — `give back` inside `try` breaks the build while the Watcher
+  3. MEDIUM — `give back` inside `try` breaks the build while the Watcher
      says "All good."
-  5. MEDIUM — writing to an unknown record field passes the Watcher, then
+  4. MEDIUM — writing to an unknown record field passes the Watcher, then
      fails at Go compile.
-  6. LOW — two genuine Watcher false alarms on variables that are clearly
+  5. LOW — two genuine Watcher false alarms on variables that are clearly
      used.
-- **gobug** (`github.com/Hotgrin/gobug`) — a separate, real side project
-  (friendly Go error explainer, Wails desktop app, v0.2.0 tagged). CI fix
-  prepared (release permissions + macOS runner pinned off Tahoe/LC_UUID
-  issue) but not yet applied/pushed as of this writing.
 
 ## Decided — house rules, don't relitigate
 
@@ -86,14 +97,20 @@ Last verified against remote: **2026-07-21**, commit `274ccc1`, tag `v0.5.7`.
 - **Live verification only.** Nothing ships without being built, `go vet`,
   `go test`, and (for `.hot` code) actually run through the compiled
   binary — never eyeballed or assumed correct from reading source.
+- **Check `git tag` before creating a new tag, every time.** A stale local
+  tag silently pointing at the wrong commit shipped as v0.5.8's *first*
+  attempt — `git tag vX.Y.Z` doesn't overwrite an existing tag, it just
+  fails quietly enough to miss, and the wrong commit gets released. Always
+  `git tag` first to check for a collision, and after pushing, verify via
+  fresh clone that the tag actually points at the commit you meant.
 
 ## Beginner-education initiative — status
 
 Sequence agreed: **Day Zero → Day One → living glossary → first
 micro-lessons → AI Mentor**, with community-building ("Study Stoep") and
 the hotgrin.com homepage redesign running alongside whenever there's room.
-Day Zero and Day One are built (Day One mid-flight, see above). Homepage
-redesign was proposed but not started; glossary and AI Mentor not started.
+Day Zero and Day One are both shipped (v0.5.8). Homepage redesign was
+proposed but not started; glossary and AI Mentor not started.
 
 ## Marketing / launch — status
 
@@ -120,12 +137,11 @@ entry, not a sign to go digging through old chats.
 
 ## Next up
 
-1. Push the Day One patch (v0.5.8) — the one blocking step to close that
-   loop.
-2. Push the gobug CI fix.
-3. Re-verify the record-instantiation bug against a fresh clone; ship it
-   properly (as v0.5.9, since v0.5.7/v0.5.8 are now Day Zero/Day One) if
-   still broken.
-4. Living glossary or first micro-lessons — next beginner-education piece
+1. Push the record-instantiation fix (v0.5.9) — the one blocking step to
+   close that loop.
+2. Living glossary or first micro-lessons — next beginner-education piece
    after Day One.
-5. hotgrin.com homepage redesign (simple, plain-language nav, one button).
+3. hotgrin.com homepage redesign (simple, plain-language nav, one button).
+4. Confirm whether the ZATech launch post actually went out, and whether
+   the six audited engine bugs became real GitHub issues (both still
+   unconfirmed as of this writing).

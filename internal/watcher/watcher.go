@@ -189,6 +189,11 @@ func (w *Watcher) collect() {
 				walk(n.Body)
 			case *ast.ForEachStmt:
 				walk(n.Body)
+			case *ast.TestStmt:
+				walk(n.Body)
+			case *ast.TryStmt:
+				walk(n.Body)
+				walk(n.Handler)
 			}
 		}
 	}
@@ -385,7 +390,9 @@ func (w *Watcher) checkExpr(e ast.Expr, names map[string]bool) {
 	switch x := e.(type) {
 	case *ast.Identifier:
 		if !names[x.Name] {
-			if _, isAction := w.actions[x.Name]; !isAction {
+			_, isAction := w.actions[x.Name]
+			_, isRecordProto := w.records[x.Name]
+			if !isAction && !isRecordProto {
 				w.add(Error, x.Line,
 					fmt.Sprintf("there is no value called '%s' here — is it a typo, or did you forget to set it?", x.Name),
 					fmt.Sprintf("daar is geen waarde genaamd '%s' hier nie — is dit 'n tikfout, of het jy vergeet om dit te stel?", x.Name))
