@@ -1,0 +1,87 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index faa3bb9..5da2c1f 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -3,6 +3,20 @@
+ All notable changes to hotgrin are recorded here. This project follows
+ [Semantic Versioning](https://semver.org/) loosely while it is pre-1.0.
+ 
++## [0.5.7] - 2026-07-21
++
++### Added
++- **Day Zero** (`docs/day-zero.md`): a five-minute, no-computer pre-lesson
++  for people who have never coded before — recipes, grocery lists, and
++  labelled jars mapped onto algorithms, loops, decisions, variables, and
++  actions, plus a "break it on purpose" exercise showing why step order
++  matters, and honest answers to the fears that stop beginners before they
++  start (breaking the computer, forgetting everything, "too old to learn").
++  Linked from the main README, `docs/getting-started.md`, and as lesson
++  "00" at the top of `examples/learn/README.md`. First piece of a wider
++  push to make hotgrin approachable for absolute beginners, not just
++  people who already think of themselves as technical.
++
+ ## [0.5.6] - 2026-07-09
+ 
+ ### Fixed
+diff --git a/README.md b/README.md
+index c0edff8..5afc949 100644
+--- a/README.md
++++ b/README.md
+@@ -228,6 +228,11 @@ the full list lives in [ROADMAP.md](ROADMAP.md).
+ 
+ ## Learn it in 27 small steps
+ 
++Never coded before — not even a little? Start with
++**[Day Zero](docs/day-zero.md)**, a five-minute, no-computer page that shows
++you've already been thinking like a programmer your whole life. Then come
++back here.
++
+ [`examples/learn/`](examples/learn/) is a numbered lesson path — every file a
+ tiny, runnable, heavily-commented program, from your first `say "hello"` to a
+ playable word game. Read, run, change, break, fix: that cycle is the course.
+diff --git a/cmd/hotgrin/main.go b/cmd/hotgrin/main.go
+index 16eebee..740315f 100644
+--- a/cmd/hotgrin/main.go
++++ b/cmd/hotgrin/main.go
+@@ -24,7 +24,7 @@ import (
+ 	"github.com/hotgrin/hotgrin/internal/watcher"
+ )
+ 
+-const version = "hotgrin 0.5.6"
++const version = "hotgrin 0.5.7"
+ 
+ func main() {
+ 	af := false
+diff --git a/docs/getting-started.md b/docs/getting-started.md
+index fc24764..7a1b843 100644
+--- a/docs/getting-started.md
++++ b/docs/getting-started.md
+@@ -2,6 +2,11 @@
+ 
+ Three ways in, from easiest to most hands-on. Pick one.
+ 
++> **Never written a line of code before?** Read
++> **[Day Zero](day-zero.md)** first — five minutes, no computer needed,
++> no installs. It'll show you that you already think like a programmer.
++> Then come back here.
++
+ ## Option 1 — Nothing to install (30 seconds)
+ 
+ Open the **[browser playground](https://hotgrin.github.io/hotgrin/playground/)**.
+diff --git a/examples/learn/README.md b/examples/learn/README.md
+index f465e70..5d7726e 100644
+--- a/examples/learn/README.md
++++ b/examples/learn/README.md
+@@ -8,8 +8,12 @@ break it, fix it. That cycle IS learning to program.
+ hotgrin run 01-say-hello.hot
+ ```
+ 
++**Never coded before?** Start at **[Day Zero](../../docs/day-zero.md)** — a
++five-minute, no-computer page, before lesson 01.
++
+ | # | Lesson | You learn |
+ |---|--------|-----------|
++| 00 | [Day Zero](../../docs/day-zero.md) | *(unplugged)* recipes, lists, and jars are already algorithms, loops, and variables |
+ | 01 | [say hello](01-say-hello.hot) | your first program, `say`, comments |
+ | 02 | [remembering things](02-remembering-things.hot) | `set`, names with spaces, joining text |
+ | 03 | [maths that behaves](03-maths-that-behaves.hot) | arithmetic, brackets, `rounded to`, increase/decrease |

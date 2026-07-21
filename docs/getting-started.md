@@ -2,6 +2,11 @@
 
 Three ways in, from easiest to most hands-on. Pick one.
 
+> **Never written a line of code before?** Read
+> **[Day Zero](day-zero.md)** first — five minutes, no computer needed,
+> no installs. It'll show you that you already think like a programmer.
+> Then come back here.
+
 ## Option 1 — Nothing to install (30 seconds)
 
 Open the **[browser playground](https://hotgrin.github.io/hotgrin/playground/)**.

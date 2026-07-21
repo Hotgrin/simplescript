@@ -228,6 +228,11 @@ the full list lives in [ROADMAP.md](ROADMAP.md).
 
 ## Learn it in 27 small steps
 
+Never coded before — not even a little? Start with
+**[Day Zero](docs/day-zero.md)**, a five-minute, no-computer page that shows
+you've already been thinking like a programmer your whole life. Then come
+back here.
+
 [`examples/learn/`](examples/learn/) is a numbered lesson path — every file a
 tiny, runnable, heavily-commented program, from your first `say "hello"` to a
 playable word game. Read, run, change, break, fix: that cycle is the course.

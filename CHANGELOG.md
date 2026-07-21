@@ -3,6 +3,20 @@
 All notable changes to hotgrin are recorded here. This project follows
 [Semantic Versioning](https://semver.org/) loosely while it is pre-1.0.
 
+## [0.5.7] - 2026-07-21
+
+### Added
+- **Day Zero** (`docs/day-zero.md`): a five-minute, no-computer pre-lesson
+  for people who have never coded before — recipes, grocery lists, and
+  labelled jars mapped onto algorithms, loops, decisions, variables, and
+  actions, plus a "break it on purpose" exercise showing why step order
+  matters, and honest answers to the fears that stop beginners before they
+  start (breaking the computer, forgetting everything, "too old to learn").
+  Linked from the main README, `docs/getting-started.md`, and as lesson
+  "00" at the top of `examples/learn/README.md`. First piece of a wider
+  push to make hotgrin approachable for absolute beginners, not just
+  people who already think of themselves as technical.
+
 ## [0.5.6] - 2026-07-09
 
 ### Fixed
